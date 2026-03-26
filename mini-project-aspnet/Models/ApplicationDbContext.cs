@@ -9,5 +9,8 @@ namespace mini_project_aspnet.Models
         {
         }
 
+        public DbSet<Section> sections { get; set; }
+
+
     }
 }
