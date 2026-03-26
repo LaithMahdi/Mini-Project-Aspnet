@@ -115,28 +115,10 @@ namespace mini_project_aspnet.Controllers
             return View(section);
         }
 
-        // GET: Sections/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var section = await _context.sections
-                .FirstOrDefaultAsync(m => m.id == id);
-            if (section == null)
-            {
-                return NotFound();
-            }
-
-            return View(section);
-        }
-
         // POST: Sections/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var section = await _context.sections.FindAsync(id);
             if (section != null)
