@@ -7,6 +7,7 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/custom-styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/mini_project_aspnet.styles.css" asp-append-version="true" />
     <style>
         /* Fixed sidebar */
@@ -42,31 +43,49 @@
                 margin-left: 0;
             }
         }
+
+        /* Hide sidebar when not logged in */
+        .main-content.full-width {
+            margin-left: 0;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Fixed Sidebar -->
-    <div class="sidebar">
-        <a class="d-block fs-5 fw-semibold text-decoration-none text-dark mb-4"
-           asp-area="" asp-controller="Home" asp-action="Index">
-            School Management
-        </a>
-        <ul class="nav nav-pills flex-column gap-1">
-            <li class="nav-item">
-                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-dark" asp-area="" asp-controller="Sections" asp-action="Index">Gérer les sections</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-            </li>
-        </ul>
-    </div>
+    @{
+        var isLoggedIn = Context.Session.GetString("UserId") != null;
+        var userFullName = Context.Session.GetString("UserFullName");
+        var userRole = Context.Session.GetString("UserRole");
+    }
+
+    <!-- Fixed Sidebar - Only show if logged in -->
+    @if (isLoggedIn)
+    {
+        <div class="sidebar">
+            <a class="d-block fs-5 fw-semibold text-decoration-none text-dark mb-4"
+               asp-area="" asp-controller="Home" asp-action="Index">
+                School Management
+            </a>
+            <ul class="nav nav-pills flex-column gap-1">
+                <li class="nav-item">
+                    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark" asp-area="" asp-controller="Sections" asp-action="Index">Gérer les sections</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </li>
+                <li class="nav-item mt-4 border-top pt-3">
+                    <span class="d-block text-muted small mb-2">@userFullName</span>
+                    <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
+                </li>
+            </ul>
+        </div>
+    }
 
     <!-- Scrollable Main Content -->
-    <div class="main-content">
+    <div class="main-content @(isLoggedIn ? "" : "full-width")">
         <main role="main">
             @RenderBody()
         </main>
