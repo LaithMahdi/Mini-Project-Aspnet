@@ -1,0 +1,146 @@
+@model mini_project_aspnet.Models.Student
+
+@{
+    ViewData["Title"] = "Create Student";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet" />
+
+@Html.AntiForgeryToken()
+
+<div class="page-wrapper">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1>Create Student</h1>
+            <p>Add a new student to the system</p>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="nav-breadcrumb">
+        <a asp-action="Index">Students</a>
+        <span class="separator">/</span>
+        <span>Create</span>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card-modern" style="max-width: 800px;">
+        <div class="card-header">
+            <h2>Student Information</h2>
+        </div>
+
+        <form asp-action="Create">
+            <!-- Validation Summary -->
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            <!-- Personal Information Section -->
+            <div style="border-bottom: 1.5px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--primary-color); margin-bottom: 1.5rem;">Personal Information</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <!-- Full Name -->
+                    <div class="form-group-custom">
+                        <label asp-for="fullName" class="form-label-custom">Full Name</label>
+                        <input asp-for="fullName" class="form-control-custom" placeholder="e.g., John Doe" />
+                        <span asp-validation-for="fullName" class="form-error"></span>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group-custom">
+                        <label asp-for="email" class="form-label-custom">Email Address</label>
+                        <input asp-for="email" type="email" class="form-control-custom" placeholder="student@school.com" />
+                        <span asp-validation-for="email" class="form-error"></span>
+                    </div>
+
+                    <!-- CIN Number -->
+                    <div class="form-group-custom">
+                        <label asp-for="cinNumber" class="form-label-custom">CIN Number</label>
+                        <input asp-for="cinNumber" class="form-control-custom" placeholder="e.g., AB123456" />
+                        <span asp-validation-for="cinNumber" class="form-error"></span>
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="form-group-custom">
+                        <label asp-for="dateOfBirth" class="form-label-custom">Date of Birth</label>
+                        <input asp-for="dateOfBirth" type="date" class="form-control-custom" />
+                        <span asp-validation-for="dateOfBirth" class="form-error"></span>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.3rem;">Password will be set to: YYYY-MM-DD format of DOB</p>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="form-group-custom">
+                        <label asp-for="gender" class="form-label-custom">Gender</label>
+                        <select asp-for="gender" class="form-control-custom">
+                            <option value="">Select Gender</option>
+                            <option value="@Gender.Man">Male</option>
+                            <option value="@Gender.Woman">Female</option>
+                        </select>
+                        <span asp-validation-for="gender" class="form-error"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div style="border-bottom: 1.5px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1rem; font-weight: 600; color: var(--primary-color); margin-bottom: 1.5rem;">Contact Information</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <!-- Phone Number -->
+                    <div class="form-group-custom">
+                        <label asp-for="phoneNumber" class="form-label-custom">Phone Number</label>
+                        <input asp-for="phoneNumber" class="form-control-custom" placeholder="+1-234-567-8900" />
+                        <span asp-validation-for="phoneNumber" class="form-error"></span>
+                    </div>
+
+                    <!-- Second Phone Number -->
+                    <div class="form-group-custom">
+                        <label asp-for="secondPhoneNumber" class="form-label-custom">Alternative Phone (Optional)</label>
+                        <input asp-for="secondPhoneNumber" class="form-control-custom" placeholder="+1-234-567-8901" />
+                        <span asp-validation-for="secondPhoneNumber" class="form-error"></span>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="form-group-custom" style="margin-top: 1.5rem;">
+                    <label asp-for="address" class="form-label-custom">Address</label>
+                    <textarea asp-for="address" class="form-control-custom" placeholder="Street address, city, state, zip code" style="min-height: 80px;"></textarea>
+                    <span asp-validation-for="address" class="form-error"></span>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="form-group-custom">
+                <div class="form-check-custom">
+                    <input type="checkbox" class="form-check-input-custom" asp-for="isActive" id="isActive" />
+                    <label for="isActive" class="form-check-label-custom">
+                        Mark this student as active
+                    </label>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn-custom btn-primary-gradient">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Create Student
+                </button>
+                <a asp-action="Index" class="btn-custom btn-secondary" style="justify-content: center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12" />
+                        <polyline points="12 19 5 12 12 5" />
+                    </svg>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
