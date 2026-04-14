@@ -1,0 +1,47 @@
+@model school.ViewModels.LoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Login";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - school</title>
+    <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-100 via-brand-50 to-slate-200 flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl bg-white p-8 shadow-soft">
+        <div class="mb-6 text-center">
+            <h1 class="text-2xl font-bold text-slate-900 mb-1">Welcome back</h1>
+            <p class="text-sm text-slate-500">Sign in to access School Management</p>
+        </div>
+
+        <form asp-action="Login" method="post" class="space-y-4">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+            <div>
+                <label asp-for="UserName" class="form-label"></label>
+                <input asp-for="UserName" class="form-control" placeholder="Enter username" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+
+            <div>
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" placeholder="Enter password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="w-full rounded-xl bg-brand-600 py-2.5 text-white font-semibold hover:bg-brand-700 transition">Sign in</button>
+        </form>
+
+        <p class="mt-6 text-center text-xs text-slate-400">School Management System</p>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

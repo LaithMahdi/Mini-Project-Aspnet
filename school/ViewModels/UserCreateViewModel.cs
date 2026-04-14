@@ -1,4 +1,5 @@
 using school.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace school.ViewModels
 {
@@ -9,6 +10,11 @@ namespace school.ViewModels
         public Gender? Gender { get; set; }
         public bool IsActive { get; set; } = true;
         public string? UserName { get; set; }
+
+        [Required]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
 

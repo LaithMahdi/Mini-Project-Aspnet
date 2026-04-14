@@ -68,6 +68,7 @@ namespace school.Controllers
                     Gender = model.Gender,
                     IsActive = model.IsActive,
                     UserName = model.UserName,
+                    Password = model.Password,
                     Email = model.Email,
                     PhoneNumber = model.PhoneNumber,
                     CreatedAt = DateTime.UtcNow,
