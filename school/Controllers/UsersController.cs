@@ -21,7 +21,11 @@ namespace school.Controllers
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Users.ToListAsync());
+            var users = await _context.Users
+                .Include(u => u.Student)
+                .Include(u => u.Teacher)
+                .ToListAsync();
+            return View(users);
         }
 
         // GET: Users/Details/5
@@ -231,6 +235,30 @@ namespace school.Controllers
             var roles = new List<Role> { Role.Teacher, Role.Student };
             ViewBag.Roles = new SelectList(roles);
             ViewBag.Genders = new SelectList(Enum.GetValues<Gender>());
+        }
+
+        /// <summary>
+        /// Generates a student ID with format: 2 letters from name + YYYY (birth year) + DD (birth day)
+        /// Example: "JO199915" for John born 1999-09-15
+        /// </summary>
+        public static string GenerateStudentId(string fullName, DateTime? dateOfBirth)
+        {
+            if (string.IsNullOrWhiteSpace(fullName) || !dateOfBirth.HasValue)
+                return string.Empty;
+
+            var namePart = new string(fullName
+                .Where(char.IsLetter)
+                .Take(2)
+                .Select(char.ToUpper)
+                .ToArray());
+
+            if (namePart.Length < 2)
+                namePart = namePart.PadRight(2, 'X');
+
+            var yearPart = dateOfBirth.Value.Year.ToString();
+            var dayPart = dateOfBirth.Value.Day.ToString().PadLeft(2, '0');
+
+            return $"{namePart}{yearPart}{dayPart}";
         }
     }
 }

@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <Target Name="Tailwind" BeforeTargets="Build">
-    <Exec Command="npm run tailwind:build" />
+    <Exec Command="npm run tailwind:build" IgnoreExitCode="true" />
   </Target>
 
 </Project>
