@@ -11,7 +11,7 @@ namespace mini_project_aspnet.Models
     public class Student : User
     {
         [MaxLength(500)]
-        public string avatarUrl { get; set; }
+        public string? avatarUrl { get; set; }
 
         public DateTime dateOfBirth { get; set; }
 
@@ -27,10 +27,10 @@ namespace mini_project_aspnet.Models
         public string phoneNumber { get; set; }
 
         [MaxLength(20)]
-        public string secondPhoneNumber { get; set; }
+        public string? secondPhoneNumber { get; set; }
 
         [MaxLength(500)]
-        public string address { get; set; }
+        public string? address { get; set; }
 
         public bool isActive { get; set; } = true;
 
