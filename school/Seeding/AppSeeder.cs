@@ -33,8 +33,10 @@ namespace school.Seeding
             if (!await context.Sections.AnyAsync())
             {
                 context.Sections.AddRange(
-                    new Section { Name = "Computer Science", Code = "CS", Description = "Computer Science Section", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Mathematics", Code = "MATH", Description = "Mathematics Section", CreatedAt = now, UpdatedAt = now }
+                    new Section { Name = "Computer Science", Code = "CS", Description = "Advanced software engineering and computer science department.", CreatedAt = now, UpdatedAt = now },
+                    new Section { Name = "Data Science", Code = "DS", Description = "Focus on big data, AI, and statistical analysis.", CreatedAt = now, UpdatedAt = now },
+                    new Section { Name = "Network Security", Code = "NS", Description = "Cybersecurity and infrastructure management.", CreatedAt = now, UpdatedAt = now },
+                    new Section { Name = "Mathematics", Code = "MATH", Description = "Pure and applied mathematics department.", CreatedAt = now, UpdatedAt = now }
                 );
                 await context.SaveChangesAsync();
             }
