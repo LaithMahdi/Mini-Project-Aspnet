@@ -49,6 +49,7 @@ namespace school.Controllers
             return View(new UserCreateViewModel
             {
                 IsActive = true,
+                Role = Role.Student,
                 EnrollmentDate = DateTime.UtcNow
             });
         }
@@ -226,7 +227,9 @@ namespace school.Controllers
 
         private void PopulateSelectLists()
         {
-            ViewBag.Roles = new SelectList(Enum.GetValues<Role>());
+            // Only show Teacher and Student roles (exclude Admin)
+            var roles = new List<Role> { Role.Teacher, Role.Student };
+            ViewBag.Roles = new SelectList(roles);
             ViewBag.Genders = new SelectList(Enum.GetValues<Gender>());
         }
     }
