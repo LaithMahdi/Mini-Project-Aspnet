@@ -1,77 +1,98 @@
 ﻿@model IEnumerable<school.Models.Subject>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Subjects";
+
+    var search = ViewBag.Search as string;
+    var type = ViewBag.Type as school.Models.SubjectType?;
+    var isActive = ViewBag.IsActive as bool?;
+    var typeOptions = ViewBag.SubjectTypeOptions as SelectList;
+    var activeStatusOptions = ViewBag.ActiveStatusOptions as SelectList;
 }
 
-<h1>Index</h1>
+<section class="subjects-page">
+    <div class="subjects-header">
+        <div>
+            <h1>Subjects Management</h1>
+            <p class="subjects-subtitle">Define subjects, workload, category, and activation status.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">+ Create New Subject</a>
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Code)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Coefficient)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.HoursPerWeek)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Type)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedAt)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Code)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Coefficient)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.HoursPerWeek)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Type)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsActive)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedAt)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <form asp-action="Index" method="get" class="subjects-filter-bar">
+        <div class="subjects-filter-group subjects-filter-search">
+            <label for="search">Search by name/code</label>
+            <input id="search" name="search" value="@search" class="form-control" placeholder="Mathematics, PHY-101, ..." />
+        </div>
+
+        <div class="subjects-filter-group">
+            <label for="type">Type</label>
+            <select id="type" name="type" class="form-control" asp-items="typeOptions">
+                <option value="">All Types</option>
+            </select>
+        </div>
+
+        <div class="subjects-filter-group">
+            <label for="isActive">Status</label>
+            <select id="isActive" name="isActive" class="form-control" asp-items="activeStatusOptions">
+                <option value="">All Statuses</option>
+            </select>
+        </div>
+
+        <div class="subjects-filter-actions">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-action="Index" class="btn btn-outline-light">Clear</a>
+        </div>
+    </form>
+
+    <div class="subjects-table-wrap">
+        <table class="subjects-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Coefficient</th>
+                    <th>Hours/Week</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Updated At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td><span class="subjects-code-chip">@item.Code</span></td>
+                        <td>@item.Coefficient</td>
+                        <td>@item.HoursPerWeek h</td>
+                        <td><span class="subjects-type-chip">@item.Type</span></td>
+                        <td>
+                            @if (item.IsActive)
+                            {
+                                <span class="subjects-status subjects-status-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="subjects-status subjects-status-inactive">Inactive</span>
+                            }
+                        </td>
+                        <td>@item.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="subjects-actions-cell">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="subjects-action subjects-action-edit">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="subjects-action subjects-action-delete">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="subjects-empty-state" role="alert">
+            No subjects found. <a asp-action="Create">Create the first subject</a>
+        </div>
+    }
+</section>
