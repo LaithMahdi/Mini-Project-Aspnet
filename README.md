@@ -1,6 +1,6 @@
 # School Management System
 
-Système de gestion scolaire ASP.NET Core avec Razor Pages permettant la création et la gestion d'utilisateurs (étudiants et enseignants).
+Système de gestion scolaire ASP.NET Core MVC avec Razor Views permettant la création et la gestion d'utilisateurs (étudiants et enseignants).
 
 ## 🚀 Fonctionnalités
 
@@ -39,6 +39,14 @@ dotnet restore
 
 ```bash
 dotnet ef database update
+```
+
+Ou via la Console du Gestionnaire de package (NuGet / Visual Studio) :
+
+```powershell
+PM> Drop-Database
+PM> Add-Migration UpdateFields
+PM> Update-Database
 ```
 
 ### 4. Lancer l'application
@@ -112,6 +120,7 @@ school/
 ## 🐛 Correctifs récents
 
 ### Fix: Section 'Scripts' définie deux fois
+
 - **Problème** : Exception `System.InvalidOperationException: Section 'Scripts' is already defined`
 - **Cause** : Le contenu du fichier `Create.cshtml` était dupliqué
 - **Solution** : Suppression du contenu dupliqué et de la section `@section Scripts` en doublon
@@ -134,11 +143,13 @@ school/
 ### Types d'utilisateurs
 
 #### 👨‍🏫 Enseignant
+
 - Spécialisation (ex: Mathématiques, Physique)
 - Date d'embauche
 - Salaire
 
 #### 👨‍🎓 Étudiant
+
 - Date de naissance
 - Numéro d'identité (CIN)
 - Numéro de téléphone secondaire (parent/tuteur)
@@ -147,16 +158,16 @@ school/
 
 ## 🛠️ Technologies utilisées
 
-| Technologie | Version | Utilisation |
-|-------------|---------|-------------|
-| ASP.NET Core | 10 | Framework web |
-| C# | 14.0 | Langage principal |
-| Entity Framework Core | 10 | ORM base de données |
-| Razor Pages | - | Architecture UI/Pages |
-| MVC Controllers | - | Logique applicative |
-| Tailwind CSS | - | Styling et design |
-| JavaScript | ES6+ | Interactions côté client |
-| SQL Server | LocalDB | Base de données |
+| Technologie           | Version | Utilisation              |
+| --------------------- | ------- | ------------------------ |
+| ASP.NET Core          | 10      | Framework web            |
+| C#                    | 14.0    | Langage principal        |
+| Entity Framework Core | 10.0.6  | ORM base de données      |
+| Razor Views           | -       | Architecture UI          |
+| MVC Controllers       | -       | Logique applicative      |
+| Tailwind CSS          | -       | Styling et design        |
+| JavaScript            | ES6+    | Interactions côté client |
+| SQL Server            | LocalDB | Base de données          |
 
 ## 📊 Modèles principaux
 
@@ -174,12 +185,12 @@ public class UserCreateViewModel
     public string Role { get; set; }
     public string Gender { get; set; }
     public bool IsActive { get; set; }
-    
+
     // Champs enseignant
     public string Specialization { get; set; }
     public DateTime? HireDate { get; set; }
     public decimal? Salary { get; set; }
-    
+
     // Champs étudiant
     public DateTime? DateOfBirth { get; set; }
     public string CinNumber { get; set; }
@@ -203,12 +214,14 @@ public class UserCreateViewModel
 ## 🎨 Interface utilisateur
 
 ### Formulaire réactif
+
 - Affichage/masquage automatique des sections selon le rôle sélectionné
 - Validation en temps réel
 - Messages d'erreur contextuels
 - Design responsive (mobile, tablette, desktop)
 
 ### Palette de couleurs
+
 - **Primaire** : Indigo (`#4F46E5`)
 - **Enseignants** : Bleu (`#1E40AF`)
 - **Étudiants** : Vert (`#15803D`)
@@ -239,11 +252,11 @@ dotnet publish -c Release --self-contained
 ## 📦 Dépendances principales
 
 ```xml
-<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
-<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
-<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0" />
-<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
-<PackageReference Include="Microsoft.AspNetCore.Mvc" Version="10.0.0" />
+<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.6" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.6" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.6" />
+<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.6" />
+<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
 ```
 
 ## 🔐 Sécurité
@@ -275,6 +288,7 @@ dotnet publish -c Release --self-contained
 ## 🐛 Signaler un bug
 
 Créez une issue GitHub avec :
+
 - Description du problème
 - Étapes pour reproduire
 - Comportement attendu vs réel
@@ -295,19 +309,21 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 ## 👨‍💻 Auteur
 
 **Laith Mahdi**
+
 - GitHub : [@LaithMahdi](https://github.com/LaithMahdi)
 - Projet : [mini-project-aspnet](https://github.com/LaithMahdi/mini-project-aspnet)
 
 ## 📞 Support
 
 Pour les questions ou les problèmes :
+
 - 📧 Ouvrir une issue sur [GitHub Issues](https://github.com/LaithMahdi/mini-project-aspnet/issues)
 - 💬 Consulter la documentation du projet
 
 ## 📚 Ressources utiles
 
 - [Documentation ASP.NET Core](https://docs.microsoft.com/aspnet/core)
-- [Razor Pages Documentation](https://docs.microsoft.com/aspnet/core/razor-pages)
+- [ASP.NET Core MVC Documentation](https://docs.microsoft.com/aspnet/core/mvc)
 - [Entity Framework Core](https://docs.microsoft.com/ef/core)
 - [Tailwind CSS](https://tailwindcss.com)
 - [ASP.NET Core Security](https://docs.microsoft.com/aspnet/core/security)
@@ -337,16 +353,27 @@ git pull origin main
 # Restaurer les dépendances
 dotnet restore
 
+# Installer les dépendances front-end (Tailwind)
+npm install
+
 # Build le projet
 dotnet build
 
 # Lancer en debug
 dotnet run
 
+# Compiler Tailwind CSS
+npm run tailwind:build
+
 # Migrations EF Core
 dotnet ef migrations add NomMigration
 dotnet ef database update
 dotnet ef database drop
+
+# Migrations EF Core (NuGet Package Manager Console)
+PM> Drop-Database
+PM> Add-Migration UpdateFields
+PM> Update-Database
 
 # Tests
 dotnet test
@@ -354,6 +381,6 @@ dotnet test
 
 ---
 
-**Dernière mise à jour** : 2024  
+**Dernière mise à jour** : 2026  
 **Version** : 1.0.0  
 **Statut** : En développement 🚧

@@ -1,4 +1,21 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var currentControllerLower = currentController.ToLowerInvariant();
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var moduleCssPath = currentControllerLower switch
+    {
+        "home" => "~/css/modules/home.css",
+        "users" => "~/css/modules/users.css",
+        "sections" => "~/css/modules/sections.css",
+        "classes" => "~/css/modules/classes.css",
+        "subjects" => "~/css/modules/subjects.css",
+        "rooms" => "~/css/modules/rooms.css",
+        "sessions" => "~/css/modules/sessions.css",
+        _ => null
+    };
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -8,13 +25,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @if (!string.IsNullOrWhiteSpace(moduleCssPath))
+    {
+        <link rel="stylesheet" href="@moduleCssPath" asp-append-version="true" />
+    }
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 
 <body class="app-body">
-    @{
-        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-        var isAuthenticated = User.Identity?.IsAuthenticated == true;
-    }
 <div class="app-layout">
     @if (isAuthenticated)
     {

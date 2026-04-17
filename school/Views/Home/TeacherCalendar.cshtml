@@ -1,0 +1,103 @@
+@model school.ViewModels.TeacherCalendarViewModel
+
+@{
+    ViewData["Title"] = "Teacher Calendar";
+
+    var weekDays = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+    var previousMonth = Model.MonthStartDate.AddMonths(-1);
+    var nextMonth = Model.MonthStartDate.AddMonths(1);
+}
+
+<section class="teacher-calendar-page">
+    <div class="teacher-calendar-hero">
+        <div>
+            <p class="teacher-calendar-eyebrow">Teacher Workspace</p>
+            <h1>My Teaching Calendar</h1>
+            <p class="teacher-calendar-subtitle">@Model.TeacherName - @Model.MonthStartDate.ToString("MMMM yyyy")</p>
+        </div>
+        <div class="teacher-calendar-nav">
+            <a asp-action="Index" asp-route-year="@previousMonth.Year" asp-route-month="@previousMonth.Month" class="teacher-calendar-nav-link">
+                <i class="fa-solid fa-chevron-left"></i> Previous
+            </a>
+            <a asp-action="Index" class="teacher-calendar-nav-link teacher-calendar-nav-link-current">Today</a>
+            <a asp-action="Index" asp-route-year="@nextMonth.Year" asp-route-month="@nextMonth.Month" class="teacher-calendar-nav-link">
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="teacher-calendar-stats">
+        <article class="teacher-stat-card">
+            <span>Total Sessions</span>
+            <strong>@Model.TotalSessionsThisMonth</strong>
+        </article>
+        <article class="teacher-stat-card teacher-stat-card-planned">
+            <span>Planned</span>
+            <strong>@Model.PlannedCount</strong>
+        </article>
+        <article class="teacher-stat-card teacher-stat-card-cancelled">
+            <span>Cancelled</span>
+            <strong>@Model.CancelledCount</strong>
+        </article>
+        <article class="teacher-stat-card teacher-stat-card-postponed">
+            <span>Postponed</span>
+            <strong>@Model.PostponedCount</strong>
+        </article>
+    </div>
+
+    <section class="teacher-calendar-board" aria-label="Monthly teacher calendar">
+        <div class="teacher-calendar-weekdays">
+            @foreach (var dayName in weekDays)
+            {
+                <div>@dayName</div>
+            }
+        </div>
+
+        <div class="teacher-calendar-grid">
+            @foreach (var day in Model.Days)
+            {
+                var dayClass = "teacher-calendar-day";
+                if (!day.IsCurrentMonth)
+                {
+                    dayClass += " teacher-calendar-day-muted";
+                }
+
+                if (day.IsToday)
+                {
+                    dayClass += " teacher-calendar-day-today";
+                }
+
+                <article class="@dayClass">
+                    <div class="teacher-calendar-day-head">
+                        <time datetime="@day.Date.ToString("yyyy-MM-dd")">@day.Date.Day</time>
+                        @if (day.Sessions.Count > 0)
+                        {
+                            <span class="teacher-calendar-session-count">@day.Sessions.Count</span>
+                        }
+                    </div>
+
+                    @if (day.Sessions.Count > 0)
+                    {
+                        <ul class="teacher-calendar-session-list">
+                            @foreach (var session in day.Sessions.OrderBy(s => s.StartTime))
+                            {
+                                var statusClass = $"teacher-session-status-{session.Status.ToString().ToLower()}";
+                                <li>
+                                    <a asp-controller="Sessions" asp-action="Details" asp-route-id="@session.Id" class="teacher-calendar-session @statusClass">
+                                        <strong>@session.StartTime.ToString("HH:mm") - @session.EndTime.ToString("HH:mm")</strong>
+                                        <span>@session.SubjectName</span>
+                                        <span class="teacher-calendar-session-room">@session.RoomName</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="teacher-calendar-empty-day">No classes</p>
+                    }
+                </article>
+            }
+        </div>
+    </section>
+</section>

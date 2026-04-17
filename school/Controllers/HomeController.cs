@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using school.Models;
 using school.ViewModels;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace school.Controllers
 {
@@ -15,8 +16,107 @@ namespace school.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? month = null, int? year = null)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!Guid.TryParse(userIdClaim, out var userId))
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                var teacher = await _context.Teachers
+                    .Include(t => t.User)
+                    .FirstOrDefaultAsync(t => t.UserId == userId && t.IsActive && t.User.IsActive);
+
+                if (teacher == null)
+                {
+                    return View("TeacherCalendar", new TeacherCalendarViewModel());
+                }
+
+                var now = DateOnly.FromDateTime(DateTime.Today);
+                var selectedYear = year ?? now.Year;
+                var selectedMonth = month ?? now.Month;
+
+                if (selectedMonth is < 1 or > 12)
+                {
+                    selectedMonth = now.Month;
+                }
+
+                if (selectedYear < 2000 || selectedYear > 2100)
+                {
+                    selectedYear = now.Year;
+                }
+
+                var monthStart = new DateOnly(selectedYear, selectedMonth, 1);
+                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+
+                var startOffset = ((int)monthStart.DayOfWeek + 6) % 7;
+                var gridStart = monthStart.AddDays(-startOffset);
+
+                var endOffset = 6 - (((int)monthEnd.DayOfWeek + 6) % 7);
+                var gridEnd = monthEnd.AddDays(endOffset);
+
+                var sessions = await _context.Sessions
+                    .Include(s => s.Subject)
+                    .Include(s => s.Room)
+                    .Where(s => s.TeacherId == teacher.Id && s.SessionDate >= gridStart && s.SessionDate <= gridEnd)
+                    .OrderBy(s => s.SessionDate)
+                    .ThenBy(s => s.StartTime)
+                    .Select(s => new TeacherCalendarSession
+                    {
+                        Id = s.Id,
+                        SessionDate = s.SessionDate,
+                        StartTime = s.StartTime,
+                        EndTime = s.EndTime,
+                        SubjectName = s.Subject.Name + " (" + s.Subject.Code + ")",
+                        RoomName = s.Room.Name,
+                        Status = s.Status
+                    })
+                    .ToListAsync();
+
+                var grouped = sessions
+                    .GroupBy(s => s.SessionDate)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                var teacherCalendarModel = new TeacherCalendarViewModel
+                {
+                    TeacherName = teacher.User.FullName,
+                    Month = selectedMonth,
+                    Year = selectedYear,
+                    MonthStartDate = monthStart,
+                    GridStartDate = gridStart,
+                    GridEndDate = gridEnd,
+                    TotalSessionsThisMonth = 0,
+                    PlannedCount = sessions.Count(s => s.Status == SessionStatus.PLANNED),
+                    CancelledCount = sessions.Count(s => s.Status == SessionStatus.CANCELLED),
+                    PostponedCount = sessions.Count(s => s.Status == SessionStatus.POSTPONED)
+                };
+
+                var cursor = gridStart;
+                while (cursor <= gridEnd)
+                {
+                    teacherCalendarModel.Days.Add(new TeacherCalendarDay
+                    {
+                        Date = cursor,
+                        IsCurrentMonth = cursor.Month == selectedMonth,
+                        IsToday = cursor == now,
+                        Sessions = grouped.TryGetValue(cursor, out var daySessions)
+                            ? daySessions
+                            : new List<TeacherCalendarSession>()
+                    });
+
+                    cursor = cursor.AddDays(1);
+                }
+
+                teacherCalendarModel.TotalSessionsThisMonth = teacherCalendarModel.Days
+                    .Where(d => d.IsCurrentMonth)
+                    .Sum(d => d.Sessions.Count);
+
+                return View("TeacherCalendar", teacherCalendarModel);
+            }
+
             var model = new AdminDashboardViewModel
             {
                 TotalUsers = await _context.Users.CountAsync(),
