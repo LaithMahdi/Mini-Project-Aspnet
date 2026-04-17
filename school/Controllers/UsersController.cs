@@ -95,6 +95,8 @@ namespace school.Controllers
             }
 
             var user = await _context.Users
+                .Include(u => u.Teacher)
+                .Include(u => u.Student)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (user == null)
             {
@@ -365,9 +367,23 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users
+                .Include(u => u.Teacher)
+                .Include(u => u.Student)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
             if (user != null)
             {
+                if (user.Teacher != null)
+                {
+                    _context.Teachers.Remove(user.Teacher);
+                }
+
+                if (user.Student != null)
+                {
+                    _context.Students.Remove(user.Student);
+                }
+
                 _context.Users.Remove(user);
             }
 

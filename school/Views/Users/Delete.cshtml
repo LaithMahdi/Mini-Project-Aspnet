@@ -1,32 +1,64 @@
 ﻿@model school.Models.User
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete User";
 }
 
-<h1>Delete</h1>
+<section class="user-delete-page">
+    <div class="user-delete-header">
+        <div>
+            <h1>Delete User</h1>
+            <p class="user-delete-subtitle">This action permanently removes the account and cannot be undone.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light">Back to Users</a>
+    </div>
 
-<h3>Are you sure you want to delete this user?</h3>
-<div>
-    <h4>User</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.FullName)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.FullName)</dd>
+    <div class="user-delete-shell">
+        <div class="user-delete-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+                <strong>Confirm deletion</strong>
+                <p>You are about to delete this user from the system. Please verify the details below.</p>
+            </div>
+        </div>
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Role)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Role)</dd>
+        <div class="user-delete-summary">
+            <div class="user-delete-avatar">@((Model.FullName?.Length ?? 0) > 0 ? Model.FullName![0].ToString().ToUpper() : "U")</div>
+            <div>
+                <div class="user-delete-name">@Model.FullName</div>
+                <div class="user-delete-meta-row">
+                    <span class="users-role-badge @(Model.Role == school.Models.Role.Student ? "users-role-student" : Model.Role == school.Models.Role.Teacher ? "users-role-teacher" : "users-role-admin")">@Model.Role</span>
+                    @if (Model.IsActive)
+                    {
+                        <span class="users-status users-status-active">Active</span>
+                    }
+                    else
+                    {
+                        <span class="users-status users-status-inactive">Inactive</span>
+                    }
+                </div>
+            </div>
+        </div>
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Email)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Email)</dd>
+        <dl class="user-delete-details">
+            <div>
+                <dt>Username</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.UserName) ? "-" : Model.UserName)</dd>
+            </div>
+            <div>
+                <dt>Email</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Email) ? "-" : Model.Email)</dd>
+            </div>
+            <div>
+                <dt>User ID</dt>
+                <dd class="detail-code">@Model.Id</dd>
+            </div>
+        </dl>
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.UserName)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.UserName)</dd>
-    </dl>
-
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
-</div>
+        <form asp-action="Delete" class="user-delete-actions">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">Delete Permanently</button>
+            <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
+        </form>
+    </div>
+</section>

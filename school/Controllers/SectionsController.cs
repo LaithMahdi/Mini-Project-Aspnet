@@ -19,9 +19,48 @@ namespace school.Controllers
         }
 
         // GET: Sections
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, int page = 1)
         {
-            return View(await _context.Sections.ToListAsync());
+            const int pageSize = 15;
+
+            var sectionsQuery = _context.Sections.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+                sectionsQuery = sectionsQuery.Where(s =>
+                    s.Name.ToLower().Contains(term) ||
+                    s.Code.ToLower().Contains(term) ||
+                    (s.Description != null && s.Description.ToLower().Contains(term)));
+            }
+
+            var filteredTotal = await sectionsQuery.CountAsync();
+            var totalPages = filteredTotal == 0
+                ? 1
+                : (int)Math.Ceiling(filteredTotal / (double)pageSize);
+
+            if (page < 1)
+            {
+                page = 1;
+            }
+            else if (page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            var sections = await sectionsQuery
+                .OrderBy(s => s.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.FilteredTotal = filteredTotal;
+
+            return View(sections);
         }
 
         // GET: Sections/Details/5
@@ -53,10 +92,12 @@ namespace school.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Code,Description,CreatedAt,UpdatedAt")] Section section)
+        public async Task<IActionResult> Create([Bind("Name,Code,Description")] Section section)
         {
             if (ModelState.IsValid)
             {
+                section.CreatedAt = DateTime.UtcNow;
+                section.UpdatedAt = DateTime.UtcNow;
                 _context.Add(section);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -85,7 +126,7 @@ namespace school.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Code,Description,CreatedAt,UpdatedAt")] Section section)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Code,Description")] Section section)
         {
             if (id != section.Id)
             {
@@ -96,7 +137,17 @@ namespace school.Controllers
             {
                 try
                 {
-                    _context.Update(section);
+                    var existingSection = await _context.Sections.FindAsync(id);
+                    if (existingSection == null)
+                    {
+                        return NotFound();
+                    }
+
+                    existingSection.Name = section.Name;
+                    existingSection.Code = section.Code;
+                    existingSection.Description = section.Description;
+                    existingSection.UpdatedAt = DateTime.UtcNow;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)

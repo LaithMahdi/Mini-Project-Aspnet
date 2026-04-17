@@ -12,6 +12,8 @@
     var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
     var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
     var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
+    var pageWindowStart = Math.Max(1, currentPage - 1);
+    var pageWindowEnd = Math.Min(totalPages, currentPage + 1);
 
     var totalUsers = ViewBag.FilteredTotal as int? ?? 0;
     var activeUsers = ViewBag.ActiveCount as int? ?? 0;
@@ -196,7 +198,12 @@
                     <td class="users-actions-cell">
                         <a asp-action="Edit" asp-route-id="@item.Id" class="users-action users-action-edit">Edit</a>
                         <a asp-action="Details" asp-route-id="@item.Id" class="users-action users-action-view">View</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="users-action users-action-delete">Delete</a>
+                        <button type="button"
+                                class="users-action users-action-delete js-open-delete-dialog"
+                                data-user-id="@item.Id"
+                                data-user-name="@item.FullName">
+                            Delete
+                        </button>
                     </td>
                 </tr>
             }
@@ -226,7 +233,22 @@
                 <span class="users-page-link users-page-link-disabled">Previous</span>
             }
 
-            @for (var i = 1; i <= totalPages; i++)
+            @if (pageWindowStart > 1)
+            {
+                <a asp-action="Index"
+                   asp-route-page="1"
+                   asp-route-search="@search"
+                   asp-route-role="@roleFilter"
+                   asp-route-isActive="@activeFilter"
+                   class="users-page-link">1</a>
+
+                @if (pageWindowStart > 2)
+                {
+                    <span class="users-page-ellipsis">...</span>
+                }
+            }
+
+            @for (var i = pageWindowStart; i <= pageWindowEnd; i++)
             {
                 if (i == currentPage)
                 {
@@ -241,6 +263,21 @@
                        asp-route-isActive="@activeFilter"
                        class="users-page-link">@i</a>
                 }
+            }
+
+            @if (pageWindowEnd < totalPages)
+            {
+                @if (pageWindowEnd < totalPages - 1)
+                {
+                    <span class="users-page-ellipsis">...</span>
+                }
+
+                <a asp-action="Index"
+                   asp-route-page="@totalPages"
+                   asp-route-search="@search"
+                   asp-route-role="@roleFilter"
+                   asp-route-isActive="@activeFilter"
+                   class="users-page-link">@totalPages</a>
             }
 
             @if (currentPage < totalPages)
@@ -267,3 +304,59 @@
     </div>
 }
 </section>
+
+<dialog id="deleteUserDialog" class="users-delete-dialog">
+    <div class="users-delete-dialog-card">
+        <div class="users-delete-dialog-head">
+            <h3>Delete User</h3>
+            <button type="button" class="users-delete-dialog-close" id="closeDeleteDialogBtn" aria-label="Close">&times;</button>
+        </div>
+
+        <p class="users-delete-dialog-text">
+            Are you sure you want to delete <strong id="deleteUserNameText">this user</strong>? This action cannot be undone.
+        </p>
+
+        <form asp-action="Delete" method="post" id="deleteUserForm" class="users-delete-dialog-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="deleteUserIdInput" name="id" />
+            <button type="submit" class="btn btn-danger">Delete Permanently</button>
+            <button type="button" class="btn btn-outline-light" id="cancelDeleteDialogBtn">Cancel</button>
+        </form>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        (function () {
+            const dialog = document.getElementById('deleteUserDialog');
+            const userIdInput = document.getElementById('deleteUserIdInput');
+            const userNameText = document.getElementById('deleteUserNameText');
+            const cancelBtn = document.getElementById('cancelDeleteDialogBtn');
+            const closeBtn = document.getElementById('closeDeleteDialogBtn');
+            const openBtns = document.querySelectorAll('.js-open-delete-dialog');
+
+            if (!dialog || !userIdInput || !userNameText || !cancelBtn || !closeBtn || !openBtns.length) {
+                return;
+            }
+
+            openBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const userId = btn.getAttribute('data-user-id');
+                    const userName = btn.getAttribute('data-user-name') || 'this user';
+
+                    userIdInput.value = userId || '';
+                    userNameText.textContent = userName;
+                    dialog.showModal();
+                });
+            });
+
+            cancelBtn.addEventListener('click', function () {
+                dialog.close();
+            });
+
+            closeBtn.addEventListener('click', function () {
+                dialog.close();
+            });
+        })();
+    </script>
+}

@@ -1,51 +1,54 @@
 ﻿@model school.Models.Section
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete Section";
 }
 
-<h1>Delete</h1>
+<section class="section-delete-page">
+    <div class="section-delete-header">
+        <div>
+            <h1>Delete Section</h1>
+            <p class="section-delete-subtitle">This action permanently removes the section from the system.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light">Back to Sections</a>
+    </div>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Section</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Code)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Code)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UpdatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UpdatedAt)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
-</div>
+    <div class="section-delete-shell">
+        <div class="section-delete-warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+                <strong>Confirm deletion</strong>
+                <p>Deleting this section may affect linked classes and scheduling records.</p>
+            </div>
+        </div>
+
+        <dl class="section-delete-details">
+            <div>
+                <dt>Name</dt>
+                <dd>@Model.Name</dd>
+            </div>
+            <div>
+                <dt>Code</dt>
+                <dd>@Model.Code</dd>
+            </div>
+            <div class="full-col">
+                <dt>Description</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Description) ? "-" : Model.Description)</dd>
+            </div>
+            <div>
+                <dt>Created</dt>
+                <dd>@Model.CreatedAt.ToString("yyyy-MM-dd")</dd>
+            </div>
+            <div>
+                <dt>Updated</dt>
+                <dd>@Model.UpdatedAt.ToString("yyyy-MM-dd")</dd>
+            </div>
+        </dl>
+
+        <form asp-action="Delete" class="section-delete-actions">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">Delete Permanently</button>
+            <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
+        </form>
+    </div>
+</section>

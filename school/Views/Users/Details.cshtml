@@ -1,44 +1,86 @@
 ﻿@model school.Models.User
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "User Details";
 }
 
-<h1>Details</h1>
+<section class="user-details-page">
+    <div class="user-details-header">
+        <div>
+            <h1>User Details</h1>
+            <p class="user-details-subtitle">Review account profile, role, and personal information.</p>
+        </div>
+        <div class="user-details-actions">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit User</a>
+            <a asp-action="Index" class="btn btn-outline-light">Back to Users</a>
+        </div>
+    </div>
 
-<div>
-    <h4>User</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.FullName)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.FullName)</dd>
+    <div class="user-details-shell">
+        <div class="user-details-summary-card">
+            <div class="user-avatar-chip">@((Model.FullName?.Length ?? 0) > 0 ? Model.FullName![0].ToString().ToUpper() : "U")</div>
+            <div>
+                <div class="user-details-name">@Model.FullName</div>
+                <div class="user-details-meta-row">
+                    <span class="users-role-badge @(Model.Role == school.Models.Role.Student ? "users-role-student" : Model.Role == school.Models.Role.Teacher ? "users-role-teacher" : "users-role-admin")">@Model.Role</span>
+                    @if (Model.IsActive)
+                    {
+                        <span class="users-status users-status-active">Active</span>
+                    }
+                    else
+                    {
+                        <span class="users-status users-status-inactive">Inactive</span>
+                    }
+                </div>
+            </div>
+        </div>
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Role)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Role)</dd>
+        <div class="user-details-grid two-cols">
+            <section class="user-details-card">
+                <h3>Account Information</h3>
+                <dl class="user-details-list">
+                    <div><dt>Username</dt><dd>@(string.IsNullOrWhiteSpace(Model.UserName) ? "-" : Model.UserName)</dd></div>
+                    <div><dt>Email</dt><dd>@(string.IsNullOrWhiteSpace(Model.Email) ? "-" : Model.Email)</dd></div>
+                    <div><dt>Phone Number</dt><dd>@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "-" : Model.PhoneNumber)</dd></div>
+                    <div><dt>Gender</dt><dd>@(Model.Gender?.ToString() ?? "-")</dd></div>
+                </dl>
+            </section>
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Gender)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Gender)</dd>
+            <section class="user-details-card">
+                <h3>Audit Information</h3>
+                <dl class="user-details-list">
+                    <div><dt>Created At</dt><dd>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd></div>
+                    <div><dt>Last Updated</dt><dd>@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm")</dd></div>
+                    <div><dt>User Id</dt><dd class="detail-code">@Model.Id</dd></div>
+                </dl>
+            </section>
+        </div>
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.IsActive)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.IsActive)</dd>
+        @if (Model.Role == school.Models.Role.Teacher)
+        {
+            <section class="user-details-card role-card-teacher">
+                <h3>Teacher Information</h3>
+                <dl class="user-details-list two-cols">
+                    <div><dt>Specialization</dt><dd>@(string.IsNullOrWhiteSpace(Model.Teacher?.Specialization) ? "-" : Model.Teacher!.Specialization)</dd></div>
+                    <div><dt>Hire Date</dt><dd>@(Model.Teacher?.HireDate?.ToString("yyyy-MM-dd") ?? "-")</dd></div>
+                    <div><dt>Salary</dt><dd>@(Model.Teacher?.Salary?.ToString("0.##") ?? "-")</dd></div>
+                    <div><dt>Status</dt><dd>@((Model.Teacher?.IsActive ?? false) ? "Active" : "Inactive")</dd></div>
+                </dl>
+            </section>
+        }
 
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.UserName)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.UserName)</dd>
-
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Email)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.Email)</dd>
-
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.PhoneNumber)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.PhoneNumber)</dd>
-
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.CreatedAt)</dd>
-
-        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.UpdatedAt)</dt>
-        <dd class="col-sm-10">@Html.DisplayFor(model => model.UpdatedAt)</dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+        @if (Model.Role == school.Models.Role.Student)
+        {
+            <section class="user-details-card role-card-student">
+                <h3>Student Information</h3>
+                <dl class="user-details-list two-cols">
+                    <div><dt>Date of Birth</dt><dd>@(Model.Student?.DateOfBirth?.ToString("yyyy-MM-dd") ?? "-")</dd></div>
+                    <div><dt>CIN Number</dt><dd>@(string.IsNullOrWhiteSpace(Model.Student?.CinNumber) ? "-" : Model.Student!.CinNumber)</dd></div>
+                    <div><dt>Secondary Phone</dt><dd>@(string.IsNullOrWhiteSpace(Model.Student?.SecondPhoneNumber) ? "-" : Model.Student!.SecondPhoneNumber)</dd></div>
+                    <div><dt>Enrollment Date</dt><dd>@(Model.Student?.EnrollmentDate.ToString("yyyy-MM-dd") ?? "-")</dd></div>
+                    <div class="full-col"><dt>Address</dt><dd>@(string.IsNullOrWhiteSpace(Model.Student?.Address) ? "-" : Model.Student!.Address)</dd></div>
+                </dl>
+            </section>
+        }
+    </div>
+</section>
