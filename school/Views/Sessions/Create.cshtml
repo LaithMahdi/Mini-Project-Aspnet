@@ -1,74 +1,85 @@
 ﻿@model school.Models.Session
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Session";
+
+    var statusOptions = ViewBag.StatusOptions as SelectList;
+    var roomOptions = ViewBag.RoomOptions as SelectList;
+    var subjectOptions = ViewBag.SubjectOptions as SelectList;
+    var teacherOptions = ViewBag.TeacherOptions as SelectList;
 }
 
-<h1>Create</h1>
+<section class="session-form-page">
+    <div class="session-form-header">
+        <div>
+            <h1>Create Session</h1>
+            <p class="session-form-subtitle">Set day, time range, room, teacher, and subject.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light">Back to List</a>
+    </div>
 
-<h4>Session</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="DayOfWeek" class="control-label"></label>
-                <input asp-for="DayOfWeek" class="form-control" />
-                <span asp-validation-for="DayOfWeek" class="text-danger"></span>
+    <div class="session-form-shell">
+        <form asp-action="Create" method="post" class="session-form-grid">
+            <div asp-validation-summary="ModelOnly" class="session-validation"></div>
+
+            <div class="session-form-fields">
+                <div class="form-group">
+                    <label asp-for="SessionDate" class="control-label"></label>
+                    <input asp-for="SessionDate" type="date" class="form-control" />
+                    <span asp-validation-for="SessionDate" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Status" class="control-label"></label>
+                    <select asp-for="Status" class="form-control" asp-items="statusOptions"></select>
+                    <span asp-validation-for="Status" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="StartTime" class="control-label"></label>
+                    <input asp-for="StartTime" type="time" class="form-control" />
+                    <span asp-validation-for="StartTime" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="EndTime" class="control-label"></label>
+                    <input asp-for="EndTime" type="time" class="form-control" />
+                    <span asp-validation-for="EndTime" class="text-danger"></span>
+                </div>
+
+                <div class="form-group full-col">
+                    <label asp-for="TeacherId" class="control-label"></label>
+                    <select asp-for="TeacherId" class="form-control" asp-items="teacherOptions"></select>
+                    <span asp-validation-for="TeacherId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="SubjectId" class="control-label"></label>
+                    <select asp-for="SubjectId" class="form-control" asp-items="subjectOptions"></select>
+                    <span asp-validation-for="SubjectId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="RoomId" class="control-label"></label>
+                    <select asp-for="RoomId" class="form-control" asp-items="roomOptions"></select>
+                    <span asp-validation-for="RoomId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group full-col session-check-wrap">
+                    <label class="session-check-control">
+                        <input class="form-check-input" asp-for="IsActive" />
+                        <span>Session is active</span>
+                    </label>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="StartTime" class="control-label"></label>
-                <input asp-for="StartTime" class="form-control" />
-                <span asp-validation-for="StartTime" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EndTime" class="control-label"></label>
-                <input asp-for="EndTime" class="form-control" />
-                <span asp-validation-for="EndTime" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <select asp-for="Status" class="form-control"></select>
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UpdatedAt" class="control-label"></label>
-                <input asp-for="UpdatedAt" class="form-control" />
-                <span asp-validation-for="UpdatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="RoomId" class="control-label"></label>
-                <select asp-for="RoomId" class ="form-control" asp-items="ViewBag.RoomId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="SubjectId" class="control-label"></label>
-                <select asp-for="SubjectId" class ="form-control" asp-items="ViewBag.SubjectId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="TeacherId" class="control-label"></label>
-                <select asp-for="TeacherId" class ="form-control" asp-items="ViewBag.TeacherId"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            <div class="session-form-actions">
+                <button type="submit" class="btn btn-primary">Create Session</button>
+                <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

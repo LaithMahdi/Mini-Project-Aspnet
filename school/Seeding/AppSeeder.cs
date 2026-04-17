@@ -316,7 +316,6 @@ namespace school.Seeding
                     .ToListAsync();
 
                 var rnd = new Random();
-                var daysOfWeek = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
                 var timeSlots = new[] 
                 { 
                     (8, 10), (10, 12), (12, 14), (14, 16), (16, 18) 
@@ -330,13 +329,13 @@ namespace school.Seeding
 
                     for (int i = 0; i < numSessions; i++)
                     {
-                        var day = daysOfWeek[rnd.Next(daysOfWeek.Length)];
+                        var sessionDate = DateOnly.FromDateTime(DateTime.UtcNow.Date.AddDays(rnd.Next(0, 21)));
                         var timeSlot = timeSlots[rnd.Next(timeSlots.Length)];
                         var room = rooms[rnd.Next(rooms.Count)];
 
                         var session = new Session
                         {
-                            DayOfWeek = day,
+                            SessionDate = sessionDate,
                             StartTime = new TimeOnly(timeSlot.Item1, 0),
                             EndTime = new TimeOnly(timeSlot.Item2, 0),
                             Status = SessionStatus.PLANNED,
@@ -368,7 +367,7 @@ namespace school.Seeding
                     {
                         SessionId = session.Id,
                         Action = actions[rnd.Next(actions.Length)],
-                        Details = $"Session {session.DayOfWeek} {session.StartTime}-{session.EndTime}",
+                        Details = $"Session {session.SessionDate:yyyy-MM-dd} {session.StartTime}-{session.EndTime}",
                         ActorId = adminUser.Id,
                         CreatedAt = now
                     });

@@ -1,81 +1,58 @@
 ﻿@model school.Models.Session
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete Session";
 }
 
-<h1>Delete</h1>
+<section class="session-delete-page">
+    <div class="session-delete-header">
+        <div>
+            <h1>Delete Session</h1>
+            <p class="session-delete-subtitle">Review session details before permanent deletion.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light">Back to List</a>
+    </div>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Session</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DayOfWeek)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DayOfWeek)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.StartTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.StartTime)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EndTime)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EndTime)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsActive)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsActive)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UpdatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UpdatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Room)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Room.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Subject)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Subject.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Teacher)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Teacher.Id)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
-</div>
+    <div class="session-delete-shell">
+        <div class="session-delete-warning" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <div>
+                <strong>This action is permanent.</strong>
+                <p>Deleting a session may affect planning history and references.</p>
+            </div>
+        </div>
+
+        <dl class="session-delete-details">
+            <div>
+                <dt>Date</dt>
+                <dd>@Model.SessionDate.ToString("dd/MM/yyyy")</dd>
+            </div>
+            <div>
+                <dt>Time</dt>
+                <dd>@Model.StartTime.ToString("HH:mm") - @Model.EndTime.ToString("HH:mm")</dd>
+            </div>
+            <div>
+                <dt>Status</dt>
+                <dd>@Model.Status</dd>
+            </div>
+            <div>
+                <dt>Teacher</dt>
+                <dd>@(Model.Teacher?.User?.FullName ?? "-")</dd>
+            </div>
+            <div>
+                <dt>Subject</dt>
+                <dd>@(Model.Subject != null ? Model.Subject.Name + " (" + Model.Subject.Code + ")" : "-")</dd>
+            </div>
+            <div>
+                <dt>Room</dt>
+                <dd>@(Model.Room?.Name ?? "-")</dd>
+            </div>
+        </dl>
+
+        <form asp-action="Delete" class="session-delete-actions">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">Delete Session</button>
+            <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
+        </form>
+    </div>
+</section>

@@ -1,89 +1,299 @@
 ﻿@model IEnumerable<school.Models.Session>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Sessions";
+
+    var search = ViewBag.Search as string;
+    var sessionDate = ViewBag.SessionDate as DateOnly?;
+    var sessionDateValue = sessionDate.HasValue ? sessionDate.Value.ToString("yyyy-MM-dd") : string.Empty;
+    var status = ViewBag.Status as school.Models.SessionStatus?;
+    var teacherId = ViewBag.TeacherId as Guid?;
+    var subjectId = ViewBag.SubjectId as int?;
+    var startTime = ViewBag.StartTime as string;
+    var endTime = ViewBag.EndTime as string;
+    var statusOptions = ViewBag.StatusOptions as SelectList;
+    var teacherOptions = ViewBag.TeacherOptions as SelectList;
+    var subjectOptions = ViewBag.SubjectOptions as SelectList;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var pageSize = ViewBag.PageSize as int? ?? 15;
+    var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
+    var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+    var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
+    var pageWindowStart = Math.Max(1, currentPage - 1);
+    var pageWindowEnd = Math.Min(totalPages, currentPage + 1);
 }
 
-<h1>Index</h1>
+<section class="sessions-page">
+    <div class="sessions-header">
+        <div>
+            <h1>Sessions Management</h1>
+            <p class="sessions-subtitle">Plan teaching sessions by day, teacher, subject, and schedule.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">+ Create New Session</a>
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.DayOfWeek)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.StartTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EndTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Room)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Subject)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Teacher)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.DayOfWeek)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EndTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsActive)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Room.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Subject.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Teacher.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+    <form asp-action="Index" method="get" class="sessions-filter-bar">
+        <div class="sessions-filter-group sessions-filter-search">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@search" class="form-control" placeholder="Teacher, subject, room" />
+        </div>
+
+        <div class="sessions-filter-group">
+            <label for="sessionDate">Session Date</label>
+            <input id="sessionDate" type="date" name="sessionDate" value="@sessionDateValue" class="form-control" />
+        </div>
+
+        <div class="sessions-filter-group">
+            <label for="status">Status</label>
+            <select id="status" name="status" class="form-control" asp-items="statusOptions">
+                <option value="">All Statuses</option>
+            </select>
+        </div>
+
+        <div class="sessions-filter-group">
+            <label for="teacherId">Teacher</label>
+            <select id="teacherId" name="teacherId" class="form-control" asp-items="teacherOptions">
+                <option value="">All Teachers</option>
+            </select>
+        </div>
+
+        <div class="sessions-filter-group">
+            <label for="subjectId">Subject</label>
+            <select id="subjectId" name="subjectId" class="form-control" asp-items="subjectOptions">
+                <option value="">All Subjects</option>
+            </select>
+        </div>
+
+        <div class="sessions-filter-group">
+            <label for="startTime">Start Time (from)</label>
+            <input id="startTime" type="time" name="startTime" value="@startTime" class="form-control" />
+        </div>
+
+        <div class="sessions-filter-group">
+            <label for="endTime">End Time (to)</label>
+            <input id="endTime" type="time" name="endTime" value="@endTime" class="form-control" />
+        </div>
+
+        <div class="sessions-filter-actions">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-action="Index" class="btn btn-outline-light">Clear</a>
+        </div>
+    </form>
+
+    <div class="sessions-table-wrap">
+        <table class="sessions-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Teacher</th>
+                    <th>Subject</th>
+                    <th>Room</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><span class="sessions-day-chip">@item.SessionDate.ToString("dd/MM/yyyy")</span></td>
+                        <td>@item.StartTime.ToString("HH:mm")</td>
+                        <td>@item.EndTime.ToString("HH:mm")</td>
+                        <td>@(item.Teacher?.User?.FullName ?? "-")</td>
+                        <td>@(item.Subject != null ? item.Subject.Name + " (" + item.Subject.Code + ")" : "-")</td>
+                        <td>@(item.Room != null ? item.Room.Name : "-")</td>
+                        <td>
+                            <span class="sessions-status sessions-status-@item.Status.ToString().ToLower()">@item.Status</span>
+                            @if (!item.IsActive)
+                            {
+                                <span class="sessions-status sessions-status-inactive">Inactive</span>
+                            }
+                        </td>
+                        <td class="sessions-actions-cell">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="sessions-action sessions-action-edit">Edit</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="sessions-action sessions-action-view">View</a>
+                            <button type="button"
+                                    class="sessions-action sessions-action-delete js-open-session-delete-dialog"
+                                    data-session-id="@item.Id"
+                                    data-session-name="@($"{item.SessionDate:dd/MM/yyyy} {item.StartTime:HH\\:mm}-{item.EndTime:HH\\:mm}")">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="sessions-pagination-wrap">
+        <div class="sessions-pagination-summary">
+            Showing @startItem-@endItem of @filteredTotal sessions
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <nav class="sessions-pagination" aria-label="Sessions pagination">
+                @if (currentPage > 1)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(currentPage - 1)"
+                       asp-route-search="@search"
+                       asp-route-sessionDate="@sessionDate"
+                       asp-route-status="@status"
+                       asp-route-teacherId="@teacherId"
+                       asp-route-subjectId="@subjectId"
+                       asp-route-startTime="@startTime"
+                       asp-route-endTime="@endTime"
+                       class="sessions-page-link">Previous</a>
+                }
+                else
+                {
+                    <span class="sessions-page-link sessions-page-link-disabled">Previous</span>
+                }
+
+                @if (pageWindowStart > 1)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="1"
+                       asp-route-search="@search"
+                       asp-route-sessionDate="@sessionDate"
+                       asp-route-status="@status"
+                       asp-route-teacherId="@teacherId"
+                       asp-route-subjectId="@subjectId"
+                       asp-route-startTime="@startTime"
+                       asp-route-endTime="@endTime"
+                       class="sessions-page-link">1</a>
+
+                    @if (pageWindowStart > 2)
+                    {
+                        <span class="sessions-page-ellipsis">...</span>
+                    }
+                }
+
+                @for (var i = pageWindowStart; i <= pageWindowEnd; i++)
+                {
+                    if (i == currentPage)
+                    {
+                        <span class="sessions-page-link sessions-page-link-active">@i</span>
+                    }
+                    else
+                    {
+                        <a asp-action="Index"
+                           asp-route-page="@i"
+                           asp-route-search="@search"
+                           asp-route-sessionDate="@sessionDate"
+                           asp-route-status="@status"
+                           asp-route-teacherId="@teacherId"
+                           asp-route-subjectId="@subjectId"
+                           asp-route-startTime="@startTime"
+                           asp-route-endTime="@endTime"
+                           class="sessions-page-link">@i</a>
+                    }
+                }
+
+                @if (pageWindowEnd < totalPages)
+                {
+                    @if (pageWindowEnd < totalPages - 1)
+                    {
+                        <span class="sessions-page-ellipsis">...</span>
+                    }
+
+                    <a asp-action="Index"
+                       asp-route-page="@totalPages"
+                       asp-route-search="@search"
+                       asp-route-sessionDate="@sessionDate"
+                       asp-route-status="@status"
+                       asp-route-teacherId="@teacherId"
+                       asp-route-subjectId="@subjectId"
+                       asp-route-startTime="@startTime"
+                       asp-route-endTime="@endTime"
+                       class="sessions-page-link">@totalPages</a>
+                }
+
+                @if (currentPage < totalPages)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(currentPage + 1)"
+                       asp-route-search="@search"
+                       asp-route-sessionDate="@sessionDate"
+                       asp-route-status="@status"
+                       asp-route-teacherId="@teacherId"
+                       asp-route-subjectId="@subjectId"
+                       asp-route-startTime="@startTime"
+                       asp-route-endTime="@endTime"
+                       class="sessions-page-link">Next</a>
+                }
+                else
+                {
+                    <span class="sessions-page-link sessions-page-link-disabled">Next</span>
+                }
+            </nav>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="sessions-empty-state" role="alert">
+            No sessions found. <a asp-action="Create">Create the first session</a>
+        </div>
+    }
+</section>
+
+<dialog id="deleteSessionDialog" class="sessions-delete-dialog">
+    <div class="sessions-delete-dialog-card">
+        <div class="sessions-delete-dialog-head">
+            <h3>Delete Session</h3>
+            <button type="button" class="sessions-delete-dialog-close" id="closeSessionDeleteDialogBtn" aria-label="Close">&times;</button>
+        </div>
+
+        <p class="sessions-delete-dialog-text">
+            Are you sure you want to delete <strong id="deleteSessionNameText">this session</strong>? This action cannot be undone.
+        </p>
+
+        <form asp-action="Delete" method="post" class="sessions-delete-dialog-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="deleteSessionIdInput" name="id" />
+            <button type="submit" class="btn btn-danger">Delete Permanently</button>
+            <button type="button" class="btn btn-outline-light" id="cancelSessionDeleteDialogBtn">Cancel</button>
+        </form>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        (function () {
+            const dialog = document.getElementById('deleteSessionDialog');
+            const sessionIdInput = document.getElementById('deleteSessionIdInput');
+            const sessionNameText = document.getElementById('deleteSessionNameText');
+            const cancelBtn = document.getElementById('cancelSessionDeleteDialogBtn');
+            const closeBtn = document.getElementById('closeSessionDeleteDialogBtn');
+            const openBtns = document.querySelectorAll('.js-open-session-delete-dialog');
+
+            if (!dialog || !sessionIdInput || !sessionNameText || !cancelBtn || !closeBtn || !openBtns.length) {
+                return;
+            }
+
+            openBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const sessionId = btn.getAttribute('data-session-id');
+                    const sessionName = btn.getAttribute('data-session-name') || 'this session';
+
+                    sessionIdInput.value = sessionId || '';
+                    sessionNameText.textContent = sessionName;
+                    dialog.showModal();
+                });
+            });
+
+            cancelBtn.addEventListener('click', function () {
+                dialog.close();
+            });
+
+            closeBtn.addEventListener('click', function () {
+                dialog.close();
+            });
+        })();
+    </script>
 }
-    </tbody>
-</table>
