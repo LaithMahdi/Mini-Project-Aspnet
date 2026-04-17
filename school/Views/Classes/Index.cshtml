@@ -1,89 +1,256 @@
 ﻿@model IEnumerable<school.Models.Classe>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Classes";
+
+    var search = ViewBag.Search as string;
+    var sectionId = ViewBag.SectionId as int?;
+    var teacherId = ViewBag.TeacherId as Guid?;
+    var sectionOptions = ViewBag.SectionOptions as SelectList;
+    var teacherOptions = ViewBag.TeacherOptions as SelectList;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var pageSize = ViewBag.PageSize as int? ?? 15;
+    var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
+    var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+    var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
+    var pageWindowStart = Math.Max(1, currentPage - 1);
+    var pageWindowEnd = Math.Min(totalPages, currentPage + 1);
 }
 
-<h1>Index</h1>
+<section class="classes-page">
+    <div class="classes-header">
+        <div>
+            <h1>Classes Management</h1>
+            <p class="classes-subtitle">Manage teaching groups, referent teachers, and capacities.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">+ Create New Class</a>
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Level)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Filiere)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.MaxCapacity)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsArchived)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AcademicYear)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Section)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ReferentTeacher)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Level)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Filiere)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.MaxCapacity)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsArchived)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AcademicYear)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Section.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ReferentTeacher.Id)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+    <form asp-action="Index" method="get" class="classes-filter-bar">
+        <div class="classes-filter-group classes-filter-search">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@search" class="form-control" placeholder="Name, level ..." />
+        </div>
+
+        <div class="classes-filter-group">
+            <label for="sectionId">Section</label>
+            <select id="sectionId" name="sectionId" class="form-control" asp-items="sectionOptions">
+                <option value="">All Sections</option>
+            </select>
+        </div>
+
+        <div class="classes-filter-group">
+            <label for="teacherId">Teacher</label>
+            <select id="teacherId" name="teacherId" class="form-control" asp-items="teacherOptions">
+                <option value="">All Teachers</option>
+            </select>
+        </div>
+
+        <div class="classes-filter-actions">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-action="Index" class="btn btn-outline-light">Clear</a>
+        </div>
+    </form>
+
+    <div class="classes-table-wrap">
+        <table class="classes-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Level</th>
+                    <th>Filiere</th>
+                    <th>Capacity</th>
+                    <th>Academic Year</th>
+                    <th>Section</th>
+                    <th>Referent Teacher</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.Level</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Filiere) ? "-" : item.Filiere)</td>
+                        <td>@item.MaxCapacity</td>
+                        <td>@item.AcademicYear</td>
+                        <td>@(item.Section != null ? item.Section.Name : "-")</td>
+                        <td>@(item.ReferentTeacher?.User?.FullName ?? "-")</td>
+                        <td>
+                            @if (item.IsArchived)
+                            {
+                                <span class="classes-status classes-status-archived">Archived</span>
+                            }
+                            else
+                            {
+                                <span class="classes-status classes-status-active">Active</span>
+                            }
+                        </td>
+                        <td class="classes-actions-cell">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="classes-action classes-action-edit">Edit</a>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="classes-action classes-action-view">View</a>
+                            <button type="button"
+                                    class="classes-action classes-action-delete js-open-class-delete-dialog"
+                                    data-class-id="@item.Id"
+                                    data-class-name="@item.Name">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="classes-pagination-wrap">
+        <div class="classes-pagination-summary">
+            Showing @startItem-@endItem of @filteredTotal classes
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <nav class="classes-pagination" aria-label="Classes pagination">
+                @if (currentPage > 1)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(currentPage - 1)"
+                       asp-route-search="@search"
+                              asp-route-sectionId="@sectionId"
+                              asp-route-teacherId="@teacherId"
+                       class="classes-page-link">Previous</a>
+                }
+                else
+                {
+                    <span class="classes-page-link classes-page-link-disabled">Previous</span>
+                }
+
+                @if (pageWindowStart > 1)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="1"
+                       asp-route-search="@search"
+                              asp-route-sectionId="@sectionId"
+                              asp-route-teacherId="@teacherId"
+                       class="classes-page-link">1</a>
+
+                    @if (pageWindowStart > 2)
+                    {
+                        <span class="classes-page-ellipsis">...</span>
+                    }
+                }
+
+                @for (var i = pageWindowStart; i <= pageWindowEnd; i++)
+                {
+                    if (i == currentPage)
+                    {
+                        <span class="classes-page-link classes-page-link-active">@i</span>
+                    }
+                    else
+                    {
+                        <a asp-action="Index"
+                           asp-route-page="@i"
+                           asp-route-search="@search"
+                                    asp-route-sectionId="@sectionId"
+                                    asp-route-teacherId="@teacherId"
+                           class="classes-page-link">@i</a>
+                    }
+                }
+
+                @if (pageWindowEnd < totalPages)
+                {
+                    @if (pageWindowEnd < totalPages - 1)
+                    {
+                        <span class="classes-page-ellipsis">...</span>
+                    }
+
+                    <a asp-action="Index"
+                       asp-route-page="@totalPages"
+                       asp-route-search="@search"
+                              asp-route-sectionId="@sectionId"
+                              asp-route-teacherId="@teacherId"
+                       class="classes-page-link">@totalPages</a>
+                }
+
+                @if (currentPage < totalPages)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(currentPage + 1)"
+                       asp-route-search="@search"
+                              asp-route-sectionId="@sectionId"
+                              asp-route-teacherId="@teacherId"
+                       class="classes-page-link">Next</a>
+                }
+                else
+                {
+                    <span class="classes-page-link classes-page-link-disabled">Next</span>
+                }
+            </nav>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="classes-empty-state" role="alert">
+            No classes found. <a asp-action="Create">Create the first class</a>
+        </div>
+    }
+</section>
+
+<dialog id="deleteClassDialog" class="classes-delete-dialog">
+    <div class="classes-delete-dialog-card">
+        <div class="classes-delete-dialog-head">
+            <h3>Delete Class</h3>
+            <button type="button" class="classes-delete-dialog-close" id="closeClassDeleteDialogBtn" aria-label="Close">&times;</button>
+        </div>
+
+        <p class="classes-delete-dialog-text">
+            Are you sure you want to delete <strong id="deleteClassNameText">this class</strong>? This action cannot be undone.
+        </p>
+
+        <form asp-action="Delete" method="post" class="classes-delete-dialog-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="deleteClassIdInput" name="id" />
+            <button type="submit" class="btn btn-danger">Delete Permanently</button>
+            <button type="button" class="btn btn-outline-light" id="cancelClassDeleteDialogBtn">Cancel</button>
+        </form>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        (function () {
+            const dialog = document.getElementById('deleteClassDialog');
+            const classIdInput = document.getElementById('deleteClassIdInput');
+            const classNameText = document.getElementById('deleteClassNameText');
+            const cancelBtn = document.getElementById('cancelClassDeleteDialogBtn');
+            const closeBtn = document.getElementById('closeClassDeleteDialogBtn');
+            const openBtns = document.querySelectorAll('.js-open-class-delete-dialog');
+
+            if (!dialog || !classIdInput || !classNameText || !cancelBtn || !closeBtn || !openBtns.length) {
+                return;
+            }
+
+            openBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const classId = btn.getAttribute('data-class-id');
+                    const className = btn.getAttribute('data-class-name') || 'this class';
+
+                    classIdInput.value = classId || '';
+                    classNameText.textContent = className;
+                    dialog.showModal();
+                });
+            });
+
+            cancelBtn.addEventListener('click', function () {
+                dialog.close();
+            });
+
+            closeBtn.addEventListener('click', function () {
+                dialog.close();
+            });
+        })();
+    </script>
 }
-    </tbody>
-</table>

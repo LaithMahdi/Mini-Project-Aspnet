@@ -2,7 +2,7 @@
 
 namespace school.Models
 {
-    public class Classe
+    public class Classe : ITrackTimestamps
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Name { get; set; } = string.Empty;

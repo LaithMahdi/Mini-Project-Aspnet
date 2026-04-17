@@ -1,78 +1,90 @@
 ﻿@model school.Models.Classe
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Update Class";
 }
 
-<h1>Edit</h1>
+<section class="class-form-page">
+    <div class="class-form-header">
+        <div>
+            <h1>Update Class</h1>
+            <p class="class-form-subtitle">Update class structure, links, and capacity settings.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light">Back to Classes</a>
+    </div>
 
-<h4>Classe</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="class-form-shell">
+        <form asp-action="Edit" class="class-form-grid">
+            <div asp-validation-summary="ModelOnly" class="class-validation"></div>
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+
+            <div class="class-form-fields">
+                <div class="form-group">
+                    <label asp-for="Name" class="control-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Level" class="control-label"></label>
+                    <input asp-for="Level" class="form-control" />
+                    <span asp-validation-for="Level" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Filiere" class="control-label"></label>
+                    <input asp-for="Filiere" class="form-control" />
+                    <span asp-validation-for="Filiere" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="MaxCapacity" class="control-label"></label>
+                    <input asp-for="MaxCapacity" class="form-control" />
+                    <span asp-validation-for="MaxCapacity" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="AcademicYear" class="control-label"></label>
+                    <input asp-for="AcademicYear" class="form-control" />
+                    <span asp-validation-for="AcademicYear" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="SectionId" class="control-label">Section</label>
+                    <select asp-for="SectionId" class="form-control" asp-items="ViewBag.SectionId">
+                        <option value="">-- Select Section --</option>
+                    </select>
+                    <span asp-validation-for="SectionId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group full-col">
+                    <label asp-for="ReferentTeacherId" class="control-label">Referent Teacher</label>
+                    <select asp-for="ReferentTeacherId" class="form-control" asp-items="ViewBag.ReferentTeacherId">
+                        <option value="">-- Select Teacher --</option>
+                    </select>
+                    <span asp-validation-for="ReferentTeacherId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group full-col class-check-wrap">
+                    <label class="form-check class-check-control">
+                        <input class="form-check-input" asp-for="IsArchived" />
+                        <span>@Html.DisplayNameFor(model => model.IsArchived)</span>
+                    </label>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Level" class="control-label"></label>
-                <input asp-for="Level" class="form-control" />
-                <span asp-validation-for="Level" class="text-danger"></span>
+
+            <div class="class-form-meta">
+                <span>Created: @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                <span>Last Update: @Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm")</span>
             </div>
-            <div class="form-group">
-                <label asp-for="Filiere" class="control-label"></label>
-                <input asp-for="Filiere" class="form-control" />
-                <span asp-validation-for="Filiere" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MaxCapacity" class="control-label"></label>
-                <input asp-for="MaxCapacity" class="form-control" />
-                <span asp-validation-for="MaxCapacity" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsArchived" /> @Html.DisplayNameFor(model => model.IsArchived)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="AcademicYear" class="control-label"></label>
-                <input asp-for="AcademicYear" class="form-control" />
-                <span asp-validation-for="AcademicYear" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UpdatedAt" class="control-label"></label>
-                <input asp-for="UpdatedAt" class="form-control" />
-                <span asp-validation-for="UpdatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SectionId" class="control-label"></label>
-                <select asp-for="SectionId" class="form-control" asp-items="ViewBag.SectionId"></select>
-                <span asp-validation-for="SectionId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ReferentTeacherId" class="control-label"></label>
-                <select asp-for="ReferentTeacherId" class="form-control" asp-items="ViewBag.ReferentTeacherId"></select>
-                <span asp-validation-for="ReferentTeacherId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="class-form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

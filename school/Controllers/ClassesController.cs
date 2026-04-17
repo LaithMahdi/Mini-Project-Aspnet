@@ -19,10 +19,85 @@ namespace school.Controllers
         }
 
         // GET: Classes
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, int? sectionId, Guid? teacherId, int page = 1)
         {
-            var applicationDbContext = _context.Classes.Include(c => c.ReferentTeacher).Include(c => c.Section);
-            return View(await applicationDbContext.ToListAsync());
+            const int pageSize = 15;
+
+            var classesQuery = _context.Classes
+                .Include(c => c.ReferentTeacher)
+                    .ThenInclude(t => t.User)
+                .Include(c => c.Section)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+                classesQuery = classesQuery.Where(c =>
+                    c.Name.ToLower().Contains(term) ||
+                    c.Level.ToLower().Contains(term) ||
+                    c.AcademicYear.ToLower().Contains(term) ||
+                    (c.Filiere != null && c.Filiere.ToLower().Contains(term)) ||
+                    (c.Section != null && c.Section.Name.ToLower().Contains(term)) ||
+                    (c.ReferentTeacher != null && c.ReferentTeacher.User != null && c.ReferentTeacher.User.FullName.ToLower().Contains(term)));
+            }
+
+            if (sectionId.HasValue)
+            {
+                classesQuery = classesQuery.Where(c => c.SectionId == sectionId.Value);
+            }
+
+            if (teacherId.HasValue)
+            {
+                classesQuery = classesQuery.Where(c => c.ReferentTeacherId == teacherId.Value);
+            }
+
+            var filteredTotal = await classesQuery.CountAsync();
+            var totalPages = filteredTotal == 0
+                ? 1
+                : (int)Math.Ceiling(filteredTotal / (double)pageSize);
+
+            if (page < 1)
+            {
+                page = 1;
+            }
+            else if (page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            var classes = await classesQuery
+                .OrderBy(c => c.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.SectionId = sectionId;
+            ViewBag.TeacherId = teacherId;
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.FilteredTotal = filteredTotal;
+
+            var sectionOptions = await _context.Sections
+                .OrderBy(s => s.Name)
+                .Select(s => new { s.Id, Display = s.Name + " (" + s.Code + ")" })
+                .ToListAsync();
+
+            var teacherOptions = await _context.Teachers
+                .Include(t => t.User)
+                .OrderBy(t => t.User.FullName)
+                .Select(t => new
+                {
+                    t.Id,
+                    Display = t.User.FullName + (string.IsNullOrWhiteSpace(t.Specialization) ? string.Empty : " - " + t.Specialization)
+                })
+                .ToListAsync();
+
+            ViewBag.SectionOptions = new SelectList(sectionOptions, "Id", "Display", sectionId);
+            ViewBag.TeacherOptions = new SelectList(teacherOptions, "Id", "Display", teacherId);
+
+            return View(classes);
         }
 
         // GET: Classes/Details/5
@@ -35,6 +110,7 @@ namespace school.Controllers
 
             var classe = await _context.Classes
                 .Include(c => c.ReferentTeacher)
+                    .ThenInclude(t => t.User)
                 .Include(c => c.Section)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (classe == null)
@@ -48,9 +124,11 @@ namespace school.Controllers
         // GET: Classes/Create
         public IActionResult Create()
         {
-            ViewData["ReferentTeacherId"] = new SelectList(_context.Teachers, "Id", "Id");
-            ViewData["SectionId"] = new SelectList(_context.Sections, "Id", "Id");
-            return View();
+            PopulateSelectLists();
+            return View(new Classe
+            {
+                AcademicYear = DateTime.UtcNow.Year + "-" + (DateTime.UtcNow.Year + 1)
+            });
         }
 
         // POST: Classes/Create
@@ -58,7 +136,7 @@ namespace school.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Level,Filiere,MaxCapacity,IsArchived,AcademicYear,CreatedAt,UpdatedAt,SectionId,ReferentTeacherId")] Classe classe)
+        public async Task<IActionResult> Create([Bind("Name,Level,Filiere,MaxCapacity,IsArchived,AcademicYear,SectionId,ReferentTeacherId")] Classe classe)
         {
             if (ModelState.IsValid)
             {
@@ -67,8 +145,7 @@ namespace school.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ReferentTeacherId"] = new SelectList(_context.Teachers, "Id", "Id", classe.ReferentTeacherId);
-            ViewData["SectionId"] = new SelectList(_context.Sections, "Id", "Id", classe.SectionId);
+            PopulateSelectLists(classe.SectionId, classe.ReferentTeacherId);
             return View(classe);
         }
 
@@ -85,8 +162,7 @@ namespace school.Controllers
             {
                 return NotFound();
             }
-            ViewData["ReferentTeacherId"] = new SelectList(_context.Teachers, "Id", "Id", classe.ReferentTeacherId);
-            ViewData["SectionId"] = new SelectList(_context.Sections, "Id", "Id", classe.SectionId);
+            PopulateSelectLists(classe.SectionId, classe.ReferentTeacherId);
             return View(classe);
         }
 
@@ -95,7 +171,7 @@ namespace school.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,Level,Filiere,MaxCapacity,IsArchived,AcademicYear,CreatedAt,UpdatedAt,SectionId,ReferentTeacherId")] Classe classe)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,Level,Filiere,MaxCapacity,IsArchived,AcademicYear,SectionId,ReferentTeacherId")] Classe classe)
         {
             if (id != classe.Id)
             {
@@ -106,7 +182,21 @@ namespace school.Controllers
             {
                 try
                 {
-                    _context.Update(classe);
+                    var existingClasse = await _context.Classes.FindAsync(id);
+                    if (existingClasse == null)
+                    {
+                        return NotFound();
+                    }
+
+                    existingClasse.Name = classe.Name;
+                    existingClasse.Level = classe.Level;
+                    existingClasse.Filiere = classe.Filiere;
+                    existingClasse.MaxCapacity = classe.MaxCapacity;
+                    existingClasse.IsArchived = classe.IsArchived;
+                    existingClasse.AcademicYear = classe.AcademicYear;
+                    existingClasse.SectionId = classe.SectionId;
+                    existingClasse.ReferentTeacherId = classe.ReferentTeacherId;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -122,8 +212,7 @@ namespace school.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ReferentTeacherId"] = new SelectList(_context.Teachers, "Id", "Id", classe.ReferentTeacherId);
-            ViewData["SectionId"] = new SelectList(_context.Sections, "Id", "Id", classe.SectionId);
+            PopulateSelectLists(classe.SectionId, classe.ReferentTeacherId);
             return View(classe);
         }
 
@@ -137,6 +226,7 @@ namespace school.Controllers
 
             var classe = await _context.Classes
                 .Include(c => c.ReferentTeacher)
+                    .ThenInclude(t => t.User)
                 .Include(c => c.Section)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (classe == null)
@@ -165,6 +255,27 @@ namespace school.Controllers
         private bool ClasseExists(Guid id)
         {
             return _context.Classes.Any(e => e.Id == id);
+        }
+
+        private void PopulateSelectLists(int? sectionId = null, Guid? referentTeacherId = null)
+        {
+            var sections = _context.Sections
+                .OrderBy(s => s.Name)
+                .Select(s => new { s.Id, Display = s.Name + " (" + s.Code + ")" })
+                .ToList();
+
+            var teachers = _context.Teachers
+                .Include(t => t.User)
+                .OrderBy(t => t.User.FullName)
+                .Select(t => new
+                {
+                    t.Id,
+                    Display = t.User.FullName + (string.IsNullOrWhiteSpace(t.Specialization) ? string.Empty : " - " + t.Specialization)
+                })
+                .ToList();
+
+            ViewData["SectionId"] = new SelectList(sections, "Id", "Display", sectionId);
+            ViewData["ReferentTeacherId"] = new SelectList(teachers, "Id", "Display", referentTeacherId);
         }
     }
 }

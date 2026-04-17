@@ -20,6 +20,30 @@ namespace school.Models
         public DbSet<ClassSubject> ClassSubjects { get; set; }
         public DbSet<SessionAuditLog> SessionAuditLogs { get; set; }
 
+        public override int SaveChanges()
+        {
+            ApplyTimestamps();
+            return base.SaveChanges();
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            ApplyTimestamps();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyTimestamps();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            ApplyTimestamps();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -31,6 +55,29 @@ namespace school.Models
             modelBuilder.Entity<Teacher>()
                 .Property(t => t.Salary)
                 .HasPrecision(18, 2);
+        }
+
+        private void ApplyTimestamps()
+        {
+            var now = DateTime.UtcNow;
+
+            foreach (var entry in ChangeTracker.Entries<ITrackTimestamps>())
+            {
+                if (entry.State == EntityState.Added)
+                {
+                    if (entry.Entity.CreatedAt == default)
+                    {
+                        entry.Entity.CreatedAt = now;
+                    }
+
+                    entry.Entity.UpdatedAt = now;
+                }
+                else if (entry.State == EntityState.Modified)
+                {
+                    entry.Property(nameof(ITrackTimestamps.CreatedAt)).IsModified = false;
+                    entry.Entity.UpdatedAt = now;
+                }
+            }
         }
     }
 }

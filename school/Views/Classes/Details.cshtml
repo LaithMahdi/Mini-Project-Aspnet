@@ -1,78 +1,59 @@
 ﻿@model school.Models.Classe
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Class Details";
 }
 
-<h1>Details</h1>
+<section class="class-details-page">
+    <div class="class-details-header">
+        <div>
+            <h1>Class Details</h1>
+            <p class="class-details-subtitle">Review class structure, section, and assignment details.</p>
+        </div>
+        <div class="class-details-actions">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit Class</a>
+            <a asp-action="Index" class="btn btn-outline-light">Back to Classes</a>
+        </div>
+    </div>
 
-<div>
-    <h4>Classe</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Level)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Level)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Filiere)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Filiere)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MaxCapacity)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MaxCapacity)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsArchived)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsArchived)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AcademicYear)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AcademicYear)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UpdatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UpdatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Section)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Section.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ReferentTeacher)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ReferentTeacher.Id)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+    <div class="class-details-shell">
+        <div class="class-details-summary-card">
+            <div class="class-chip">@Model.Name</div>
+            <div class="class-details-meta-row">
+                <span class="classes-level-badge">@Model.Level</span>
+                @if (Model.IsArchived)
+                {
+                    <span class="classes-status classes-status-archived">Archived</span>
+                }
+                else
+                {
+                    <span class="classes-status classes-status-active">Active</span>
+                }
+            </div>
+        </div>
+
+        <div class="class-details-grid two-cols">
+            <section class="class-details-card">
+                <h3>Academic Information</h3>
+                <dl class="class-details-list">
+                    <div><dt>Name</dt><dd>@Model.Name</dd></div>
+                    <div><dt>Level</dt><dd>@Model.Level</dd></div>
+                    <div><dt>Filiere</dt><dd>@(string.IsNullOrWhiteSpace(Model.Filiere) ? "-" : Model.Filiere)</dd></div>
+                    <div><dt>Academic Year</dt><dd>@Model.AcademicYear</dd></div>
+                    <div><dt>Max Capacity</dt><dd>@Model.MaxCapacity</dd></div>
+                </dl>
+            </section>
+
+            <section class="class-details-card">
+                <h3>Assignments</h3>
+                <dl class="class-details-list">
+                    <div><dt>Section</dt><dd>@(Model.Section?.Name ?? "-")</dd></div>
+                    <div><dt>Referent Teacher</dt><dd>@(Model.ReferentTeacher?.User?.FullName ?? "-")</dd></div>
+                    <div><dt>Created</dt><dd>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd></div>
+                    <div><dt>Updated</dt><dd>@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm")</dd></div>
+                    <div><dt>Class Id</dt><dd class="detail-code">@Model.Id</dd></div>
+                </dl>
+            </section>
+        </div>
+    </div>
+</section>
