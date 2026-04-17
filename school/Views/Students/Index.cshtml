@@ -1,89 +1,265 @@
 ﻿@model IEnumerable<school.Models.Student>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Students";
+    var isTeacher = ViewBag.IsTeacher as bool? ?? false;
+
+    var search = ViewBag.Search as string;
+    var classId = ViewBag.ClassId as Guid?;
+    var gender = ViewBag.Gender as school.Models.Gender?;
+    var birthDate = ViewBag.BirthDate as DateTime?;
+    var birthDateValue = birthDate.HasValue ? birthDate.Value.ToString("yyyy-MM-dd") : string.Empty;
+    var classOptions = ViewBag.ClassOptions as SelectList;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var pageSize = ViewBag.PageSize as int? ?? 15;
+    var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
+    var activeCount = ViewBag.ActiveCount as int? ?? 0;
+    var withClassCount = ViewBag.WithClassCount as int? ?? 0;
+    var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+    var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
+    var pageWindowStart = Math.Max(1, currentPage - 1);
+    var pageWindowEnd = Math.Min(totalPages, currentPage + 1);
 }
 
-<h1>Index</h1>
+<section class="users-page">
+    <div class="users-header">
+        <div>
+            <h1>Students Management</h1>
+            <p class="users-subtitle">Browse students, filter by class/gender/date of birth, and open details quickly.</p>
+        </div>
+        @if (!isTeacher)
+        {
+            <a asp-action="Create" class="btn btn-primary">+ Create New Student</a>
+        }
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.DateOfBirth)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Gender)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CinNumber)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PhoneNumber)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.SecondPhoneNumber)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsActive)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EnrollmentDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.User)
-            </th>
-            <th>
-                Class
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.DateOfBirth)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Gender)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CinNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PhoneNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.SecondPhoneNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Address)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsActive)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EnrollmentDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.User.Id)
-            </td>
-            <td>
-                @(item.Class?.Name ?? "-")
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+    <div class="users-stats-grid">
+        <div class="users-stat-card">
+            <div class="users-stat-label">Total Students</div>
+            <div class="users-stat-value">@filteredTotal</div>
+        </div>
+        <div class="users-stat-card">
+            <div class="users-stat-label">Active</div>
+            <div class="users-stat-value">@activeCount</div>
+        </div>
+        <div class="users-stat-card">
+            <div class="users-stat-label">Assigned To Class</div>
+            <div class="users-stat-value">@withClassCount</div>
+        </div>
+        <div class="users-stat-card">
+            <div class="users-stat-label">Without Class</div>
+            <div class="users-stat-value">@(filteredTotal - withClassCount)</div>
+        </div>
+    </div>
+
+    <form asp-action="Index" method="get" class="users-filter-bar">
+        <div class="users-filter-group users-filter-search">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@search" class="form-control" placeholder="Name, username, CIN, phone, class" />
+        </div>
+
+        <div class="users-filter-group">
+            <label for="classId">Class</label>
+            <select id="classId" name="classId" class="form-control" asp-items="classOptions">
+                <option value="">All classes</option>
+            </select>
+        </div>
+
+        <div class="users-filter-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" class="form-control">
+                @if (gender == null)
+                {
+                    <option value="" selected>All genders</option>
+                }
+                else
+                {
+                    <option value="">All genders</option>
+                }
+
+                @if (gender == school.Models.Gender.Man)
+                {
+                    <option value="Man" selected>Man</option>
+                }
+                else
+                {
+                    <option value="Man">Man</option>
+                }
+
+                @if (gender == school.Models.Gender.Woman)
+                {
+                    <option value="Woman" selected>Woman</option>
+                }
+                else
+                {
+                    <option value="Woman">Woman</option>
+                }
+            </select>
+        </div>
+
+        <div class="users-filter-group">
+            <label for="birthDate">Birth Date</label>
+            <input id="birthDate" type="date" name="birthDate" value="@birthDateValue" class="form-control" />
+        </div>
+
+        <div class="users-filter-actions">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a asp-action="Index" class="btn btn-outline-light">Clear</a>
+        </div>
+    </form>
+
+    <div class="users-table-wrap">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Username</th>
+                    <th>Class</th>
+                    <th>Gender</th>
+                    <th>Birth Date</th>
+                    <th>CIN</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@(item.User?.FullName ?? "-")</td>
+                        <td>@(item.User?.UserName ?? "-")</td>
+                        <td>@(item.Class?.Name ?? "-")</td>
+                        <td>@(item.Gender?.ToString() ?? "-")</td>
+                        <td>@(item.DateOfBirth?.ToString("yyyy-MM-dd") ?? "-")</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.CinNumber) ? "-" : item.CinNumber)</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.PhoneNumber) ? "-" : item.PhoneNumber)</td>
+                        <td>
+                            @if (item.IsActive)
+                            {
+                                <span class="users-status users-status-active">Active</span>
+                            }
+                            else
+                            {
+                                <span class="users-status users-status-inactive">Inactive</span>
+                            }
+                        </td>
+                        <td class="users-actions-cell">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="users-action users-action-view">Details</a>
+                            @if (!isTeacher)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="users-action users-action-edit">Edit</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="users-action users-action-delete">Delete</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="users-pagination-wrap">
+        <div class="users-pagination-summary">
+            Showing @startItem-@endItem of @filteredTotal students
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <nav class="users-pagination" aria-label="Students pagination">
+                @if (currentPage > 1)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(currentPage - 1)"
+                       asp-route-search="@search"
+                       asp-route-classId="@classId"
+                       asp-route-gender="@gender"
+                       asp-route-birthDate="@birthDateValue"
+                       class="users-page-link">Previous</a>
+                }
+                else
+                {
+                    <span class="users-page-link users-page-link-disabled">Previous</span>
+                }
+
+                @if (pageWindowStart > 1)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="1"
+                       asp-route-search="@search"
+                       asp-route-classId="@classId"
+                       asp-route-gender="@gender"
+                       asp-route-birthDate="@birthDateValue"
+                       class="users-page-link">1</a>
+
+                    @if (pageWindowStart > 2)
+                    {
+                        <span class="users-page-ellipsis">...</span>
+                    }
+                }
+
+                @for (var i = pageWindowStart; i <= pageWindowEnd; i++)
+                {
+                    if (i == currentPage)
+                    {
+                        <span class="users-page-link users-page-link-active">@i</span>
+                    }
+                    else
+                    {
+                        <a asp-action="Index"
+                           asp-route-page="@i"
+                           asp-route-search="@search"
+                           asp-route-classId="@classId"
+                           asp-route-gender="@gender"
+                           asp-route-birthDate="@birthDateValue"
+                           class="users-page-link">@i</a>
+                    }
+                }
+
+                @if (pageWindowEnd < totalPages)
+                {
+                    @if (pageWindowEnd < totalPages - 1)
+                    {
+                        <span class="users-page-ellipsis">...</span>
+                    }
+
+                    <a asp-action="Index"
+                       asp-route-page="@totalPages"
+                       asp-route-search="@search"
+                       asp-route-classId="@classId"
+                       asp-route-gender="@gender"
+                       asp-route-birthDate="@birthDateValue"
+                       class="users-page-link">@totalPages</a>
+                }
+
+                @if (currentPage < totalPages)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(currentPage + 1)"
+                       asp-route-search="@search"
+                       asp-route-classId="@classId"
+                       asp-route-gender="@gender"
+                       asp-route-birthDate="@birthDateValue"
+                       class="users-page-link">Next</a>
+                }
+                else
+                {
+                    <span class="users-page-link users-page-link-disabled">Next</span>
+                }
+            </nav>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="users-empty-state" role="alert">
+            No students found.
+            @if (!isTeacher)
+            {
+                <a asp-action="Create">Create the first student</a>
+            }
+        </div>
+    }
+</section>
     </tbody>
 </table>

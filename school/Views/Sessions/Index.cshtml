@@ -18,6 +18,7 @@
     var totalPages = ViewBag.TotalPages as int? ?? 1;
     var pageSize = ViewBag.PageSize as int? ?? 15;
     var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
+    var isTeacher = ViewBag.IsTeacher as bool? ?? false;
     var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
     var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
     var pageWindowStart = Math.Max(1, currentPage - 1);
@@ -30,7 +31,10 @@
             <h1>Sessions Management</h1>
             <p class="sessions-subtitle">Plan teaching sessions by day, teacher, subject, and schedule.</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">+ Create New Session</a>
+        @if (!isTeacher)
+        {
+            <a asp-action="Create" class="btn btn-primary">+ Create New Session</a>
+        }
     </div>
 
     <form asp-action="Index" method="get" class="sessions-filter-bar">
@@ -51,12 +55,15 @@
             </select>
         </div>
 
-        <div class="sessions-filter-group">
-            <label for="teacherId">Teacher</label>
-            <select id="teacherId" name="teacherId" class="form-control" asp-items="teacherOptions">
-                <option value="">All Teachers</option>
-            </select>
-        </div>
+        @if (!isTeacher)
+        {
+            <div class="sessions-filter-group">
+                <label for="teacherId">Teacher</label>
+                <select id="teacherId" name="teacherId" class="form-control" asp-items="teacherOptions">
+                    <option value="">All Teachers</option>
+                </select>
+            </div>
+        }
 
         <div class="sessions-filter-group">
             <label for="subjectId">Subject</label>
@@ -113,14 +120,29 @@
                             }
                         </td>
                         <td class="sessions-actions-cell">
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="sessions-action sessions-action-edit">Edit</a>
+                            @if (!isTeacher)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="sessions-action sessions-action-edit">Edit</a>
+                            }
                             <a asp-action="Details" asp-route-id="@item.Id" class="sessions-action sessions-action-view">View</a>
-                            <button type="button"
-                                    class="sessions-action sessions-action-delete js-open-session-delete-dialog"
-                                    data-session-id="@item.Id"
-                                    data-session-name="@($"{item.SessionDate:dd/MM/yyyy} {item.StartTime:HH\\:mm}-{item.EndTime:HH\\:mm}")">
-                                Delete
-                            </button>
+                            @if (!isTeacher)
+                            {
+                                <button type="button"
+                                        class="sessions-action sessions-action-delete js-open-session-delete-dialog"
+                                        data-session-id="@item.Id"
+                                        data-session-name="@($"{item.SessionDate:dd/MM/yyyy} {item.StartTime:HH\\:mm}-{item.EndTime:HH\\:mm}")">
+                                    Delete
+                                </button>
+                            }
+                            else if (item.Status != school.Models.SessionStatus.CANCELLED)
+                            {
+                                <form asp-action="Cancel" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                    <button type="submit" class="sessions-action sessions-action-delete">Cancel</button>
+                                </form>
+                            }
                         </td>
                     </tr>
                 }
@@ -242,6 +264,8 @@
     }
 </section>
 
+@if (!isTeacher)
+{
 <dialog id="deleteSessionDialog" class="sessions-delete-dialog">
     <div class="sessions-delete-dialog-card">
         <div class="sessions-delete-dialog-head">
@@ -261,8 +285,11 @@
         </form>
     </div>
 </dialog>
+}
 
 @section Scripts {
+    @if (!isTeacher)
+    {
     <script>
         (function () {
             const dialog = document.getElementById('deleteSessionDialog');
@@ -296,4 +323,5 @@
             });
         })();
     </script>
+    }
 }

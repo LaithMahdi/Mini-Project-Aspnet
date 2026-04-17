@@ -12,6 +12,7 @@
     var totalPages = ViewBag.TotalPages as int? ?? 1;
     var pageSize = ViewBag.PageSize as int? ?? 15;
     var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
+    var isTeacher = ViewBag.IsTeacher as bool? ?? false;
     var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
     var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
     var pageWindowStart = Math.Max(1, currentPage - 1);
@@ -24,7 +25,10 @@
             <h1>Classes Management</h1>
             <p class="classes-subtitle">Manage teaching groups, referent teachers, and capacities.</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">+ Create New Class</a>
+        @if (!isTeacher)
+        {
+            <a asp-action="Create" class="btn btn-primary">+ Create New Class</a>
+        }
     </div>
 
     <form asp-action="Index" method="get" class="classes-filter-bar">
@@ -90,14 +94,20 @@
                             }
                         </td>
                         <td class="classes-actions-cell">
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="classes-action classes-action-edit">Edit</a>
+                            @if (!isTeacher)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="classes-action classes-action-edit">Edit</a>
+                            }
                             <a asp-action="Details" asp-route-id="@item.Id" class="classes-action classes-action-view">View</a>
-                            <button type="button"
-                                    class="classes-action classes-action-delete js-open-class-delete-dialog"
-                                    data-class-id="@item.Id"
-                                    data-class-name="@item.Name">
-                                Delete
-                            </button>
+                            @if (!isTeacher)
+                            {
+                                <button type="button"
+                                        class="classes-action classes-action-delete js-open-class-delete-dialog"
+                                        data-class-id="@item.Id"
+                                        data-class-name="@item.Name">
+                                    Delete
+                                </button>
+                            }
                         </td>
                     </tr>
                 }
@@ -194,11 +204,17 @@
     @if (!Model.Any())
     {
         <div class="classes-empty-state" role="alert">
-            No classes found. <a asp-action="Create">Create the first class</a>
+            No classes found.
+            @if (!isTeacher)
+            {
+                <a asp-action="Create">Create the first class</a>
+            }
         </div>
     }
 </section>
 
+@if (!isTeacher)
+{
 <dialog id="deleteClassDialog" class="classes-delete-dialog">
     <div class="classes-delete-dialog-card">
         <div class="classes-delete-dialog-head">
@@ -218,8 +234,11 @@
         </form>
     </div>
 </dialog>
+}
 
 @section Scripts {
+    @if (!isTeacher)
+    {
     <script>
         (function () {
             const dialog = document.getElementById('deleteClassDialog');
@@ -253,4 +272,5 @@
             });
         })();
     </script>
+    }
 }

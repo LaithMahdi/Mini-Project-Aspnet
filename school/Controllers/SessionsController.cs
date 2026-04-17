@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,8 @@ namespace school.Controllers
             int page = 1)
         {
             const int pageSize = 15;
+            var isTeacher = User.IsInRole(Role.Teacher.ToString());
+            var currentTeacherId = await GetCurrentTeacherIdAsync();
 
             var sessionsQuery = _context.Sessions
                 .Include(s => s.Room)
@@ -37,6 +40,17 @@ namespace school.Controllers
                 .Include(s => s.Teacher)
                     .ThenInclude(t => t.User)
                 .AsQueryable();
+
+            if (isTeacher)
+            {
+                if (!currentTeacherId.HasValue)
+                {
+                    return Forbid();
+                }
+
+                sessionsQuery = sessionsQuery.Where(s => s.TeacherId == currentTeacherId.Value);
+                teacherId = currentTeacherId.Value;
+            }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -109,6 +123,7 @@ namespace school.Controllers
             ViewBag.PageSize = pageSize;
             ViewBag.TotalPages = totalPages;
             ViewBag.FilteredTotal = filteredTotal;
+            ViewBag.IsTeacher = isTeacher;
 
             PopulateFilterOptions(status, teacherId, subjectId);
 
@@ -134,12 +149,28 @@ namespace school.Controllers
                 return NotFound();
             }
 
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                var currentTeacherId = await GetCurrentTeacherIdAsync();
+                if (!currentTeacherId.HasValue || session.TeacherId != currentTeacherId.Value)
+                {
+                    return Forbid();
+                }
+            }
+
+            ViewBag.IsTeacher = User.IsInRole(Role.Teacher.ToString());
+
             return View(session);
         }
 
         // GET: Sessions/Create
         public IActionResult Create()
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             PopulateEditOptions();
             return View(new Session
             {
@@ -158,6 +189,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("SessionDate,StartTime,EndTime,Status,IsActive,RoomId,SubjectId,TeacherId")] Session session)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
                 Console.WriteLine($"Creating session: Date={session.SessionDate}, StartTime={session.StartTime}, EndTime={session.EndTime}, Status={session.Status}, IsActive={session.IsActive}, RoomId={session.RoomId}, SubjectId={session.SubjectId}, TeacherId={session.TeacherId}");
             if (ModelState.IsValid)
             {
@@ -173,6 +209,11 @@ namespace school.Controllers
         // GET: Sessions/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -194,6 +235,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,SessionDate,StartTime,EndTime,Status,IsActive,RoomId,SubjectId,TeacherId")] Session session)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             if (id != session.Id)
             {
                 return NotFound();
@@ -240,6 +286,11 @@ namespace school.Controllers
         // GET: Sessions/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -264,6 +315,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             var session = await _context.Sessions.FindAsync(id);
             if (session != null)
             {
@@ -271,6 +327,39 @@ namespace school.Controllers
             }
 
             await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(int id, string? returnUrl = null)
+        {
+            var session = await _context.Sessions
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (session == null)
+            {
+                return NotFound();
+            }
+
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                var currentTeacherId = await GetCurrentTeacherIdAsync();
+                if (!currentTeacherId.HasValue || session.TeacherId != currentTeacherId.Value)
+                {
+                    return Forbid();
+                }
+            }
+
+            session.Status = SessionStatus.CANCELLED;
+            session.IsActive = false;
+            await _context.SaveChangesAsync();
+
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -359,6 +448,20 @@ namespace school.Controllers
             ViewBag.RoomOptions = new SelectList(roomOptions, "Id", "Display", roomId);
             ViewBag.SubjectOptions = new SelectList(subjectOptions, "Id", "Display", subjectId);
             ViewBag.TeacherOptions = new SelectList(teacherOptions, "Id", "Display", teacherId);
+        }
+
+        private async Task<Guid?> GetCurrentTeacherIdAsync()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var userId))
+            {
+                return null;
+            }
+
+            return await _context.Teachers
+                .Where(t => t.UserId == userId && t.IsActive)
+                .Select(t => (Guid?)t.Id)
+                .FirstOrDefaultAsync();
         }
     }
 }

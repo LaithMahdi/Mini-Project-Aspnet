@@ -32,7 +32,17 @@ namespace school.Controllers
 
                 if (teacher == null)
                 {
-                    return View("TeacherCalendar", new TeacherCalendarViewModel());
+                    var today = DateOnly.FromDateTime(DateTime.Today);
+                    var safeMonthStart = new DateOnly(today.Year, today.Month, 1);
+                    return View("TeacherCalendar", new TeacherCalendarViewModel
+                    {
+                        TeacherName = "-",
+                        Month = safeMonthStart.Month,
+                        Year = safeMonthStart.Year,
+                        MonthStartDate = safeMonthStart,
+                        GridStartDate = safeMonthStart,
+                        GridEndDate = safeMonthStart
+                    });
                 }
 
                 var now = DateOnly.FromDateTime(DateTime.Today);
@@ -113,6 +123,40 @@ namespace school.Controllers
                 teacherCalendarModel.TotalSessionsThisMonth = teacherCalendarModel.Days
                     .Where(d => d.IsCurrentMonth)
                     .Sum(d => d.Sessions.Count);
+
+                var assignedClassIds = await _context.Classes
+                    .Where(c => c.ReferentTeacherId == teacher.Id || c.ClassSubjects.Any(cs => cs.TeacherId == teacher.Id))
+                    .Select(c => c.Id)
+                    .Distinct()
+                    .ToListAsync();
+
+                teacherCalendarModel.MyClasses = await _context.Classes
+                    .Where(c => assignedClassIds.Contains(c.Id))
+                    .OrderBy(c => c.Name)
+                    .Select(c => new TeacherClassItem
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        Level = c.Level,
+                        AcademicYear = c.AcademicYear
+                    })
+                    .ToListAsync();
+
+                teacherCalendarModel.MyStudents = await _context.Students
+                    .Include(s => s.User)
+                    .Include(s => s.Class)
+                    .Where(s => s.ClassId != null && assignedClassIds.Contains(s.ClassId.Value))
+                    .OrderBy(s => s.User.FullName)
+                    .Select(s => new TeacherStudentItem
+                    {
+                        Id = s.Id,
+                        FullName = s.User.FullName,
+                        UserName = s.User.UserName ?? "-",
+                        ClassName = s.Class != null ? s.Class.Name : "-"
+                    })
+                    .ToListAsync();
+
+                teacherCalendarModel.TotalStudentsInMyClasses = teacherCalendarModel.MyStudents.Count;
 
                 return View("TeacherCalendar", teacherCalendarModel);
             }

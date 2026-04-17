@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using school.Models;
+using school.Seeding.Data;
 
 namespace school.Seeding
 {
@@ -8,21 +9,23 @@ namespace school.Seeding
         public static async Task SeedAsync(ApplicationDbContext context)
         {
             var now = DateTime.UtcNow;
+            var rnd = new Random();
 
-            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == "admin");
+            var adminSeed = UsersSeedData.Admin;
+            var adminUser = await context.Users.FirstOrDefaultAsync(u => u.UserName == adminSeed.UserName);
             if (adminUser == null)
             {
                 adminUser = new User
                 {
                     Id = Guid.NewGuid(),
-                    FullName = "System Administrator",
-                    Role = Role.Admin,
-                    Gender = Gender.Man,
-                    UserName = "admin",
-                    Email = "admin@school.local",
-                    PhoneNumber = "0000000000",
-                    Password = "admin",
-                    IsActive = true,
+                    FullName = adminSeed.FullName,
+                    Role = adminSeed.Role,
+                    Gender = adminSeed.Gender,
+                    UserName = adminSeed.UserName,
+                    Email = adminSeed.Email,
+                    PhoneNumber = adminSeed.PhoneNumber,
+                    Password = adminSeed.Password,
+                    IsActive = adminSeed.IsActive,
                     CreatedAt = now,
                     UpdatedAt = now
                 };
@@ -32,80 +35,27 @@ namespace school.Seeding
 
             if (!await context.Sections.AnyAsync())
             {
-                context.Sections.AddRange(
-                    new Section { Name = "Licence Informatique", Code = "L-INFO", Description = "Licence en Informatique (Programmation, bases, systèmes)", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Licence Réseaux et Télécommunications", Code = "L-RT", Description = "Licence en réseaux et communication", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Licence Mathématiques Appliquées", Code = "L-MA", Description = "Licence en mathématiques pour ingénieurs", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Master Génie Logiciel", Code = "M-GL", Description = "Master en architecture logicielle et systèmes complexes", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Master Data Science & IA", Code = "M-DSAI", Description = "Master en Big Data, IA et Machine Learning", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Master Cybersécurité", Code = "M-SEC", Description = "Master en sécurité informatique et réseaux", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Cycle Ingénieur Informatique", Code = "ING-INFO", Description = "Cycle ingénieur en informatique", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Cycle Ingénieur Réseaux", Code = "ING-RT", Description = "Cycle ingénieur en réseaux et systèmes", CreatedAt = now, UpdatedAt = now },
-                    new Section { Name = "Cycle Ingénieur Data Science", Code = "ING-DS", Description = "Cycle ingénieur spécialisé en data science", CreatedAt = now, UpdatedAt = now }
-                );
+                context.Sections.AddRange(SectionsSeedData.Build(now));
                 await context.SaveChangesAsync();
             }
 
             if (!await context.Subjects.AnyAsync())
             {
-                context.Subjects.AddRange(
-                    new Subject { Name = "Programmation Java", Code = "JAVA", Coefficient = 2, HoursPerWeek = 4, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Structures de Données", Code = "SD", Coefficient = 3, HoursPerWeek = 4, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Systèmes d'Exploitation", Code = "OS", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Deep Learning", Code = "DL", Coefficient = 3, HoursPerWeek = 4, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Big Data", Code = "BD", Coefficient = 3, HoursPerWeek = 4, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Administration Réseaux", Code = "ADMIN-NET", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.TD, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Sécurité Informatique", Code = "SEC", Coefficient = 3, HoursPerWeek = 3, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Comptabilité Générale", Code = "COMPTA-G", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Comptabilité Analytique", Code = "COMPTA-A", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.TD, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Finance d'Entreprise", Code = "FIN", Coefficient = 3, HoursPerWeek = 4, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Marketing Fondamental", Code = "MKT-F", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Marketing Digital", Code = "MKT-D", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.TD, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Management des Entreprises", Code = "MGMT", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Droit des Affaires", Code = "LAW", Coefficient = 2, HoursPerWeek = 2, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Techniques de Communication", Code = "COMM", Coefficient = 1, HoursPerWeek = 2, Type = SubjectType.TD, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Statistiques", Code = "STAT", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now },
-                    new Subject { Name = "Probabilités", Code = "PROBA", Coefficient = 2, HoursPerWeek = 3, Type = SubjectType.COURSE, IsActive = true, CreatedAt = now, UpdatedAt = now }
-                );
+                context.Subjects.AddRange(SubjectsSeedData.Build(now));
                 await context.SaveChangesAsync();
             }
 
             // Seed Rooms
             if (!await context.Rooms.AnyAsync())
             {
-                var rooms = new List<Room>
-                {
-                    new Room { Name = "Room A1", Type = RoomType.TD, Capacity = 40, Building = "Bloc A", Floor = 1, HasProjector = true, HasComputers = false, IsAvailable = true, Equipment = "Projector, Whiteboard", CreatedAt = now, UpdatedAt = now },
-                    new Room { Name = "Room A2", Type = RoomType.TD, Capacity = 40, Building = "Bloc A", Floor = 1, HasProjector = true, HasComputers = false, IsAvailable = true, Equipment = "Projector, Whiteboard", CreatedAt = now, UpdatedAt = now },
-                    new Room { Name = "Lab A1", Type = RoomType.Labo, Capacity = 25, Building = "Bloc A", Floor = 2, HasProjector = false, HasComputers = true, IsAvailable = true, Equipment = "25 Computers, Server", CreatedAt = now, UpdatedAt = now },
-                    new Room { Name = "Lab A2", Type = RoomType.Labo, Capacity = 25, Building = "Bloc A", Floor = 2, HasProjector = false, HasComputers = true, IsAvailable = true, Equipment = "25 Computers, Server", CreatedAt = now, UpdatedAt = now },
-                    new Room { Name = "Room B1", Type = RoomType.TP, Capacity = 30, Building = "Bloc B", Floor = 1, HasProjector = true, HasComputers = false, IsAvailable = true, Equipment = "Projector, Whiteboard", CreatedAt = now, UpdatedAt = now },
-                    new Room { Name = "Room B2", Type = RoomType.TP, Capacity = 30, Building = "Bloc B", Floor = 1, HasProjector = true, HasComputers = false, IsAvailable = true, Equipment = "Projector, Whiteboard", CreatedAt = now, UpdatedAt = now },
-                    new Room { Name = "Amphitheater 1", Type = RoomType.AMPHI, Capacity = 100, Building = "Main Hall", Floor = 0, HasProjector = true, HasComputers = false, IsAvailable = true, Equipment = "Projector, Sound System", CreatedAt = now, UpdatedAt = now }
-                };
-                context.Rooms.AddRange(rooms);
+                context.Rooms.AddRange(RoomsSeedData.Build(now));
                 await context.SaveChangesAsync();
             }
 
             // Seed Teachers with correct genders and specializations (no duplicates)
             {
-                var teachersData = new List<(string Name, Gender Gender, string Specialization)>
-                {
-                    ("Ahmed Ben Ali", Gender.Man, "Programming & Algorithms"),
-                    ("Sami Trabelsi", Gender.Man, "Database Systems"),
-                    ("Nour Gharbi", Gender.Man, "Web Development"),
-                    ("Hichem Mansouri", Gender.Man, "Network Architecture"),
-                    ("Amira Khlifi", Gender.Woman, "Data Science & AI"),
-                    ("Youssef Jaziri", Gender.Man, "Cybersecurity"),
-                    ("Fatima Ben Hadj", Gender.Woman, "Operating Systems"),
-                    ("Mohamed Ounissi", Gender.Man, "Software Engineering"),
-                    ("Leila Bouslama", Gender.Woman, "Mathematics"),
-                    ("Karim Hadji", Gender.Man, "Mobile Development"),
-                    ("Souad Hamza", Gender.Woman, "Cloud Computing"),
-                    ("Zaineb Mansour", Gender.Woman, "Machine Learning")
-                };
+                var teachersData = TeachersSeedData.Get();
 
-                var rnd = new Random();
                 foreach (var (name, gender, specialization) in teachersData)
                 {
                     var userName = name.Replace(" ", "").ToLower();
@@ -122,7 +72,7 @@ namespace school.Seeding
                             UserName = userName,
                             Email = $"{userName}@university.tn",
                             PhoneNumber = "2" + rnd.Next(10000000, 99999999),
-                            Password = "Teacher@123",
+                            Password = UsersSeedData.DefaultTeacherPassword,
                             IsActive = true,
                             CreatedAt = now,
                             UpdatedAt = now
@@ -152,14 +102,13 @@ namespace school.Seeding
 
             // Seed Students with proper birth dates for ID generation (no duplicates)
             {
-                var firstNames = new[] { "Ali", "Mohamed", "Yasmine", "Sara", "Omar", "Hiba", "Karim", "Fatima", "Noor", "Hassan", "Leila", "Amina", "Khaled", "Zaineb", "Rami", "Nadia", "Tarek", "Layla", "Samir", "Dina" };
-                var lastNames = new[] { "Ben Ali", "Trabelsi", "Jebali", "Gharbi", "Khlifi", "Mansouri", "Hadj", "Ounissi", "Bouslama", "Hadji", "Hamza", "Mansour", "Salah", "Mejri", "Lahbib" };
+                var firstNames = StudentsSeedData.FirstNames;
+                var lastNames = StudentsSeedData.LastNames;
 
-                var rnd = new Random();
                 for (int i = 1; i <= 120; i++)
                 {
-                    var fname = firstNames[(i - 1) % firstNames.Length];
-                    var lname = lastNames[((i - 1) / firstNames.Length) % lastNames.Length];
+                    var fname = firstNames[(i - 1) % firstNames.Count];
+                    var lname = lastNames[((i - 1) / firstNames.Count) % lastNames.Count];
                     var baseUserName = $"{fname}{lname}".Replace(" ", "").ToLowerInvariant();
 
                     var userName = baseUserName;
@@ -215,7 +164,7 @@ namespace school.Seeding
                         UserName = userName,
                         Email = $"{userName}@university.tn",
                         PhoneNumber = "5" + rnd.Next(10000000, 99999999),
-                        Password = "Student@123",
+                        Password = UsersSeedData.DefaultStudentPassword,
                         IsActive = true,
                         CreatedAt = now,
                         UpdatedAt = now
@@ -248,12 +197,12 @@ namespace school.Seeding
             {
                 var sections = await context.Sections.ToListAsync();
                 var teachers = await context.Teachers.ToListAsync();
-
-                var rnd = new Random();
+                var teacherIndex = 0;
 
                 foreach (var section in sections)
                 {
-                    var teacher = teachers[rnd.Next(teachers.Count)];
+                    var teacher = teachers[teacherIndex % teachers.Count];
+                    teacherIndex++;
 
                     var classe = new Classe
                     {
@@ -275,23 +224,52 @@ namespace school.Seeding
                 await context.SaveChangesAsync();
             }
 
+            // Assign students to classes when not assigned yet.
+            {
+                var classes = await context.Classes
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
+
+                if (classes.Count > 0)
+                {
+                    var studentsWithoutClass = await context.Students
+                        .Where(s => s.ClassId == null)
+                        .OrderBy(s => s.EnrollmentDate)
+                        .ToListAsync();
+
+                    for (var i = 0; i < studentsWithoutClass.Count; i++)
+                    {
+                        studentsWithoutClass[i].ClassId = classes[i % classes.Count].Id;
+                    }
+
+                    if (studentsWithoutClass.Count > 0)
+                    {
+                        await context.SaveChangesAsync();
+                    }
+                }
+            }
+
             // Seed ClassSubjects
             if (!await context.ClassSubjects.AnyAsync())
             {
-                var classes = await context.Classes.ToListAsync();
+                var classes = await context.Classes
+                    .Include(c => c.ReferentTeacher)
+                    .ToListAsync();
                 var subjects = await context.Subjects.ToListAsync();
                 var teachers = await context.Teachers.ToListAsync();
-
-                var rnd = new Random();
 
                 foreach (var classe in classes)
                 {
                     var numSubjects = rnd.Next(4, 7);
                     var selectedSubjects = subjects.OrderBy(x => rnd.Next()).Take(numSubjects);
+                    var isFirstAssignment = true;
 
                     foreach (var subject in selectedSubjects)
                     {
-                        var teacher = teachers[rnd.Next(teachers.Count)];
+                        var teacher = isFirstAssignment && classe.ReferentTeacherId.HasValue
+                            ? teachers.FirstOrDefault(t => t.Id == classe.ReferentTeacherId.Value) ?? teachers[rnd.Next(teachers.Count)]
+                            : teachers[rnd.Next(teachers.Count)];
+                        isFirstAssignment = false;
 
                         context.ClassSubjects.Add(new ClassSubject
                         {
@@ -315,7 +293,6 @@ namespace school.Seeding
                     .Include(cs => cs.Teacher)
                     .ToListAsync();
 
-                var rnd = new Random();
                 var timeSlots = new[] 
                 { 
                     (8, 10), (10, 12), (12, 14), (14, 16), (16, 18) 
@@ -358,7 +335,6 @@ namespace school.Seeding
             if (!await context.SessionAuditLogs.AnyAsync())
             {
                 var sessions = await context.Sessions.ToListAsync();
-                var rnd = new Random();
                 var actions = new[] { "CREATED", "MODIFIED", "CANCELLED" };
 
                 foreach (var session in sessions.Take(20))

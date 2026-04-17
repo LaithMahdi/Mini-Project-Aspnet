@@ -15,6 +15,25 @@ namespace school.ViewModels
         public int PlannedCount { get; set; }
         public int CancelledCount { get; set; }
         public int PostponedCount { get; set; }
+        public List<TeacherClassItem> MyClasses { get; set; } = new();
+        public List<TeacherStudentItem> MyStudents { get; set; } = new();
+        public int TotalStudentsInMyClasses { get; set; }
+    }
+
+    public class TeacherClassItem
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = "-";
+        public string Level { get; set; } = "-";
+        public string AcademicYear { get; set; } = "-";
+    }
+
+    public class TeacherStudentItem
+    {
+        public Guid Id { get; set; }
+        public string FullName { get; set; } = "-";
+        public string UserName { get; set; } = "-";
+        public string ClassName { get; set; } = "-";
     }
 
     public class TeacherCalendarDay

@@ -449,6 +449,12 @@
   text-decoration: none;
 }
 
+.teacher-calendar-session-link {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
 .teacher-calendar-session strong {
   display: block;
   font-size: 0.73rem;
@@ -486,6 +492,74 @@
   font-size: 0.72rem;
 }
 
+.teacher-session-cancel-form {
+  margin-top: 0.35rem;
+}
+
+.teacher-session-cancel-btn {
+  width: 100%;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  background: #fff1f2;
+  color: #9f1239;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.3rem 0.4rem;
+  cursor: pointer;
+}
+
+.teacher-session-cancel-btn:hover {
+  background: #ffe4e6;
+}
+
+.teacher-calendar-list-header {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.teacher-calendar-related-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.teacher-calendar-related-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.8rem;
+  background: #ffffff;
+  padding: 0.7rem;
+  min-height: 220px;
+}
+
+.teacher-related-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.teacher-related-list li {
+  border: 1px solid #f1f5f9;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+  padding: 0.5rem 0.55rem;
+}
+
+.teacher-related-list strong {
+  display: block;
+  font-size: 0.8rem;
+  color: #0f172a;
+}
+
+.teacher-related-list span {
+  display: block;
+  margin-top: 0.05rem;
+  font-size: 0.72rem;
+  color: #475569;
+}
+
 @media (max-width: 1024px) {
   .teacher-calendar-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -509,6 +583,10 @@
   .teacher-calendar-day {
     border-right: none;
     min-height: auto;
+  }
+
+  .teacher-calendar-related-grid {
+    grid-template-columns: 1fr;
   }
 
   .teacher-calendar-day-muted {

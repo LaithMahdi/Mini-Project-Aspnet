@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -22,12 +23,27 @@ namespace school.Controllers
         public async Task<IActionResult> Index(string? search, int? sectionId, Guid? teacherId, int page = 1)
         {
             const int pageSize = 15;
+            var isTeacher = User.IsInRole(Role.Teacher.ToString());
+            var currentTeacherId = await GetCurrentTeacherIdAsync();
 
             var classesQuery = _context.Classes
                 .Include(c => c.ReferentTeacher)
                     .ThenInclude(t => t.User)
                 .Include(c => c.Section)
                 .AsQueryable();
+
+            if (isTeacher)
+            {
+                if (!currentTeacherId.HasValue)
+                {
+                    return Forbid();
+                }
+
+                classesQuery = classesQuery.Where(c =>
+                    c.ReferentTeacherId == currentTeacherId.Value ||
+                    c.ClassSubjects.Any(cs => cs.TeacherId == currentTeacherId.Value));
+                teacherId = currentTeacherId.Value;
+            }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -78,6 +94,7 @@ namespace school.Controllers
             ViewBag.PageSize = pageSize;
             ViewBag.TotalPages = totalPages;
             ViewBag.FilteredTotal = filteredTotal;
+            ViewBag.IsTeacher = isTeacher;
 
             var sectionOptions = await _context.Sections
                 .OrderBy(s => s.Name)
@@ -125,12 +142,30 @@ namespace school.Controllers
                 return NotFound();
             }
 
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                var currentTeacherId = await GetCurrentTeacherIdAsync();
+                if (!currentTeacherId.HasValue ||
+                    (classe.ReferentTeacherId != currentTeacherId.Value &&
+                     !classe.ClassSubjects.Any(cs => cs.TeacherId == currentTeacherId.Value)))
+                {
+                    return Forbid();
+                }
+
+                ViewBag.IsTeacher = true;
+            }
+
             return View(classe);
         }
 
         // GET: Classes/Create
         public IActionResult Create()
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             PopulateSelectLists();
             return View(new Classe
             {
@@ -145,6 +180,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Level,Filiere,MaxCapacity,IsArchived,AcademicYear,SectionId,ReferentTeacherId")] Classe classe)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             if (ModelState.IsValid)
             {
                 classe.Id = Guid.NewGuid();
@@ -159,6 +199,11 @@ namespace school.Controllers
         // GET: Classes/Edit/5
         public async Task<IActionResult> Edit(Guid? id)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -183,6 +228,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Name,Level,Filiere,MaxCapacity,IsArchived,AcademicYear,SectionId,ReferentTeacherId")] Classe classe)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             if (id != classe.Id)
             {
                 return NotFound();
@@ -233,6 +283,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStudentAssignments(Guid id, List<Guid>? studentIds)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             var classeExists = await _context.Classes.AnyAsync(c => c.Id == id);
             if (!classeExists)
             {
@@ -275,6 +330,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddSubjectAssignment(Guid id, int subjectId, Guid? teacherId)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             if (teacherId == null)
             {
                 TempData["ClassEditError"] = "Please select a teacher for the subject assignment.";
@@ -321,6 +381,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveSubjectAssignment(Guid id, int classSubjectId)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             var assignment = await _context.ClassSubjects
                 .FirstOrDefaultAsync(cs => cs.Id == classSubjectId && cs.ClassId == id);
 
@@ -336,6 +401,11 @@ namespace school.Controllers
         // GET: Classes/Delete/5
         public async Task<IActionResult> Delete(Guid? id)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             if (id == null)
             {
                 return NotFound();
@@ -359,6 +429,11 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                return Forbid();
+            }
+
             var classe = await _context.Classes.FindAsync(id);
             if (classe != null)
             {
@@ -450,6 +525,20 @@ namespace school.Controllers
                 .ToListAsync();
 
             ViewData["ClassStudentOptions"] = new MultiSelectList(students, "Id", "Display", selectedIds);
+        }
+
+        private async Task<Guid?> GetCurrentTeacherIdAsync()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var userId))
+            {
+                return null;
+            }
+
+            return await _context.Teachers
+                .Where(t => t.UserId == userId && t.IsActive)
+                .Select(t => (Guid?)t.Id)
+                .FirstOrDefaultAsync();
         }
     }
 }

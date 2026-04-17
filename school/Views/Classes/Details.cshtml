@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Class Details";
+    var isTeacher = ViewBag.IsTeacher as bool? ?? false;
 }
 
 <section class="class-details-page">
@@ -11,7 +12,10 @@
             <p class="class-details-subtitle">Review class structure, section, and assignment details.</p>
         </div>
         <div class="class-details-actions">
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit Class</a>
+            @if (!isTeacher)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit Class</a>
+            }
             <a asp-action="Index" class="btn btn-outline-light">Back to Classes</a>
         </div>
     </div>

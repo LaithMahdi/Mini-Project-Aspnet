@@ -1,80 +1,108 @@
 ﻿@model school.Models.Student
+@using school.Models
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Student";
 }
 
-<h1>Edit</h1>
+<section class="user-form-page">
+    <div class="user-form-header">
+        <div>
+            <h1>Edit Student</h1>
+            <p class="user-form-subtitle">Update student profile, class assignment and contact information.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light">Back to Students</a>
+    </div>
 
-<h4>Student</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="user-form-shell">
+        <form asp-action="Edit" class="user-form-grid">
+            <div asp-validation-summary="ModelOnly" class="user-validation"></div>
             <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="DateOfBirth" class="control-label"></label>
-                <input asp-for="DateOfBirth" class="form-control" />
-                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+
+            <div class="user-form-section">
+                <h3>Identity</h3>
+                <div class="user-form-fields two-cols">
+                    <div class="form-group">
+                        <label asp-for="UserId" class="control-label">Linked User</label>
+                        <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+                        <span asp-validation-for="UserId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ClassId" class="control-label">Class</label>
+                        <select asp-for="ClassId" class="form-control" asp-items="ViewBag.ClassId">
+                            <option value="">-- Not assigned --</option>
+                        </select>
+                        <span asp-validation-for="ClassId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="DateOfBirth" class="control-label"></label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Gender" class="control-label"></label>
+                        <select asp-for="Gender" class="form-control">
+                            <option value="">-- Select Gender --</option>
+                            <option value="@Gender.Man">@Gender.Man</option>
+                            <option value="@Gender.Woman">@Gender.Woman</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CinNumber" class="control-label"></label>
+                        <input asp-for="CinNumber" class="form-control" />
+                        <span asp-validation-for="CinNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EnrollmentDate" class="control-label"></label>
+                        <input asp-for="EnrollmentDate" type="date" class="form-control" />
+                        <span asp-validation-for="EnrollmentDate" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Gender" class="control-label"></label>
-                <input asp-for="Gender" class="form-control" />
-                <span asp-validation-for="Gender" class="text-danger"></span>
+
+            <div class="user-form-section user-form-section-student">
+                <h3>Contact</h3>
+                <div class="user-form-fields two-cols">
+                    <div class="form-group">
+                        <label asp-for="PhoneNumber" class="control-label"></label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="SecondPhoneNumber" class="control-label"></label>
+                        <input asp-for="SecondPhoneNumber" class="form-control" />
+                        <span asp-validation-for="SecondPhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group full-col">
+                        <label asp-for="Address" class="control-label"></label>
+                        <input asp-for="Address" class="form-control" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group full-col user-check-wrap">
+                        <label class="form-check user-check-control">
+                            <input class="form-check-input" asp-for="IsActive" />
+                            <span>Student is active</span>
+                        </label>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="CinNumber" class="control-label"></label>
-                <input asp-for="CinNumber" class="form-control" />
-                <span asp-validation-for="CinNumber" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PhoneNumber" class="control-label"></label>
-                <input asp-for="PhoneNumber" class="form-control" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SecondPhoneNumber" class="control-label"></label>
-                <input asp-for="SecondPhoneNumber" class="form-control" />
-                <span asp-validation-for="SecondPhoneNumber" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Address" class="control-label"></label>
-                <input asp-for="Address" class="form-control" />
-                <span asp-validation-for="Address" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="EnrollmentDate" class="control-label"></label>
-                <input asp-for="EnrollmentDate" class="form-control" />
-                <span asp-validation-for="EnrollmentDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
-                <span asp-validation-for="UserId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ClassId" class="control-label">Class</label>
-                <select asp-for="ClassId" class="form-control" asp-items="ViewBag.ClassId">
-                    <option value="">-- Not assigned --</option>
-                </select>
-                <span asp-validation-for="ClassId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <div class="user-form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

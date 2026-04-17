@@ -2,10 +2,13 @@
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
     var currentControllerLower = currentController.ToLowerInvariant();
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isTeacher = User.IsInRole("Teacher");
+    var isAdmin = User.IsInRole("Admin");
     var moduleCssPath = currentControllerLower switch
     {
         "home" => "~/css/modules/home.css",
         "users" => "~/css/modules/users.css",
+        "students" => "~/css/modules/users.css",
         "sections" => "~/css/modules/sections.css",
         "classes" => "~/css/modules/classes.css",
         "subjects" => "~/css/modules/subjects.css",
@@ -53,12 +56,18 @@
                 }
 
                 <a class="@navClass("Home")" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
-                <a class="@navClass("Users")" asp-controller="Users" asp-action="Index"><i class="fa-solid fa-users-gear"></i><span>Users</span></a>
-                <a class="@navClass("Sections")" asp-controller="Sections" asp-action="Index"><i class="fa-solid fa-layer-group"></i><span>Sections</span></a>
                 <a class="@navClass("Classes")" asp-controller="Classes" asp-action="Index"><i class="fa-solid fa-chalkboard"></i><span>Classes</span></a>
-                <a class="@navClass("Subjects")" asp-controller="Subjects" asp-action="Index"><i class="fa-solid fa-book-open"></i><span>Subjects</span></a>
-                <a class="@navClass("Rooms")" asp-controller="Rooms" asp-action="Index"><i class="fa-solid fa-door-open"></i><span>Rooms</span></a>
+             @if (!isAdmin){
+                <a class="@navClass("Students")" asp-controller="Students" asp-action="Index"><i class="fa-solid fa-user-graduate"></i><span>Students</span></a>
+             }
                 <a class="@navClass("Sessions")" asp-controller="Sessions" asp-action="Index"><i class="fa-solid fa-calendar-days"></i><span>Sessions</span></a>
+                @if (isAdmin)
+                {
+                    <a class="@navClass("Users")" asp-controller="Users" asp-action="Index"><i class="fa-solid fa-users-gear"></i><span>Users</span></a>
+                    <a class="@navClass("Sections")" asp-controller="Sections" asp-action="Index"><i class="fa-solid fa-layer-group"></i><span>Sections</span></a>
+                    <a class="@navClass("Subjects")" asp-controller="Subjects" asp-action="Index"><i class="fa-solid fa-book-open"></i><span>Subjects</span></a>
+                    <a class="@navClass("Rooms")" asp-controller="Rooms" asp-action="Index"><i class="fa-solid fa-door-open"></i><span>Rooms</span></a>
+                }
             </nav>
 
             <div class="sidebar-footer">

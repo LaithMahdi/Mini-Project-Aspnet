@@ -4,8 +4,11 @@
     ViewData["Title"] = "Teacher Calendar";
 
     var weekDays = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-    var previousMonth = Model.MonthStartDate.AddMonths(-1);
-    var nextMonth = Model.MonthStartDate.AddMonths(1);
+    var safeMonthStart = Model.MonthStartDate == default
+        ? new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1)
+        : Model.MonthStartDate;
+    var previousMonth = safeMonthStart.AddMonths(-1);
+    var nextMonth = safeMonthStart.AddMonths(1);
 }
 
 <section class="teacher-calendar-page">
@@ -13,7 +16,7 @@
         <div>
             <p class="teacher-calendar-eyebrow">Teacher Workspace</p>
             <h1>My Teaching Calendar</h1>
-            <p class="teacher-calendar-subtitle">@Model.TeacherName - @Model.MonthStartDate.ToString("MMMM yyyy")</p>
+            <p class="teacher-calendar-subtitle">@Model.TeacherName - @safeMonthStart.ToString("MMMM yyyy")</p>
         </div>
         <div class="teacher-calendar-nav">
             <a asp-action="Index" asp-route-year="@previousMonth.Year" asp-route-month="@previousMonth.Month" class="teacher-calendar-nav-link">
@@ -30,6 +33,14 @@
         <article class="teacher-stat-card">
             <span>Total Sessions</span>
             <strong>@Model.TotalSessionsThisMonth</strong>
+        </article>
+        <article class="teacher-stat-card">
+            <span>My Classes</span>
+            <strong>@Model.MyClasses.Count</strong>
+        </article>
+        <article class="teacher-stat-card">
+            <span>My Students</span>
+            <strong>@Model.TotalStudentsInMyClasses</strong>
         </article>
         <article class="teacher-stat-card teacher-stat-card-planned">
             <span>Planned</span>
@@ -83,11 +94,23 @@
                             {
                                 var statusClass = $"teacher-session-status-{session.Status.ToString().ToLower()}";
                                 <li>
-                                    <a asp-controller="Sessions" asp-action="Details" asp-route-id="@session.Id" class="teacher-calendar-session @statusClass">
-                                        <strong>@session.StartTime.ToString("HH:mm") - @session.EndTime.ToString("HH:mm")</strong>
-                                        <span>@session.SubjectName</span>
-                                        <span class="teacher-calendar-session-room">@session.RoomName</span>
-                                    </a>
+                                    <div class="teacher-calendar-session @statusClass">
+                                        <a asp-controller="Sessions" asp-action="Details" asp-route-id="@session.Id" class="teacher-calendar-session-link">
+                                            <strong>@session.StartTime.ToString("HH:mm") - @session.EndTime.ToString("HH:mm")</strong>
+                                            <span>@session.SubjectName</span>
+                                            <span class="teacher-calendar-session-room">@session.RoomName</span>
+                                        </a>
+
+                                        @if (session.Status != school.Models.SessionStatus.CANCELLED)
+                                        {
+                                            <form asp-controller="Sessions" asp-action="Cancel" method="post" class="teacher-session-cancel-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@session.Id" />
+                                                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                                <button type="submit" class="teacher-session-cancel-btn">Cancel Session</button>
+                                            </form>
+                                        }
+                                    </div>
                                 </li>
                             }
                         </ul>
@@ -98,6 +121,52 @@
                     }
                 </article>
             }
+        </div>
+    </section>
+
+    <section class="teacher-calendar-board">
+        <div class="teacher-calendar-weekdays teacher-calendar-list-header">
+            <div>My Classes</div>
+            <div>My Students</div>
+        </div>
+        <div class="teacher-calendar-related-grid">
+            <section class="teacher-calendar-related-card">
+                @if (Model.MyClasses.Any())
+                {
+                    <ul class="teacher-related-list">
+                        @foreach (var classe in Model.MyClasses)
+                        {
+                            <li>
+                                <strong>@classe.Name</strong>
+                                <span>@classe.Level - @classe.AcademicYear</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="teacher-calendar-empty-day">No class assigned.</p>
+                }
+            </section>
+
+            <section class="teacher-calendar-related-card">
+                @if (Model.MyStudents.Any())
+                {
+                    <ul class="teacher-related-list">
+                        @foreach (var student in Model.MyStudents)
+                        {
+                            <li>
+                                <strong>@student.FullName</strong>
+                                <span>@student.UserName - @student.ClassName</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="teacher-calendar-empty-day">No students found in your classes.</p>
+                }
+            </section>
         </div>
     </section>
 </section>
