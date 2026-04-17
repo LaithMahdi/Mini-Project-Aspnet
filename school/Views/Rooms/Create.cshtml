@@ -1,82 +1,84 @@
 ﻿@model school.Models.Room
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Room";
+
+    var roomTypeOptions = ViewBag.RoomTypeOptions as SelectList;
 }
 
-<h1>Create</h1>
+<section class="room-form-page">
+    <div class="room-form-header">
+        <div>
+            <h1>Create Room</h1>
+            <p class="room-form-subtitle">Register a new room with type, location, and equipment.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light">Back to List</a>
+    </div>
 
-<h4>Room</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
+    <div class="room-form-shell">
+        <form asp-action="Create" class="room-form-grid">
+            <div asp-validation-summary="ModelOnly" class="room-validation"></div>
+
+            <div class="room-form-fields">
+                <div class="form-group">
+                    <label asp-for="Name" class="control-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Type" class="control-label"></label>
+                    <select asp-for="Type" class="form-control" asp-items="roomTypeOptions"></select>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Capacity" class="control-label"></label>
+                    <input asp-for="Capacity" class="form-control" />
+                    <span asp-validation-for="Capacity" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Building" class="control-label"></label>
+                    <input asp-for="Building" class="form-control" />
+                    <span asp-validation-for="Building" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Floor" class="control-label"></label>
+                    <input asp-for="Floor" class="form-control" />
+                    <span asp-validation-for="Floor" class="text-danger"></span>
+                </div>
+
+                <div class="form-group full-col">
+                    <label asp-for="Equipment" class="control-label"></label>
+                    <input asp-for="Equipment" class="form-control" placeholder="Optional list of fixed equipment" />
+                    <span asp-validation-for="Equipment" class="text-danger"></span>
+                </div>
+
+                <div class="room-check-grid full-col">
+                    <label class="room-check-control">
+                        <input class="form-check-input" asp-for="HasProjector" />
+                        <span>Has projector</span>
+                    </label>
+                    <label class="room-check-control">
+                        <input class="form-check-input" asp-for="HasComputers" />
+                        <span>Has computers</span>
+                    </label>
+                    <label class="room-check-control">
+                        <input class="form-check-input" asp-for="IsAvailable" />
+                        <span>Available for scheduling</span>
+                    </label>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Type" class="control-label"></label>
-                <select asp-for="Type" class="form-control"></select>
-                <span asp-validation-for="Type" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Capacity" class="control-label"></label>
-                <input asp-for="Capacity" class="form-control" />
-                <span asp-validation-for="Capacity" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Building" class="control-label"></label>
-                <input asp-for="Building" class="form-control" />
-                <span asp-validation-for="Building" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Floor" class="control-label"></label>
-                <input asp-for="Floor" class="form-control" />
-                <span asp-validation-for="Floor" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="HasProjector" /> @Html.DisplayNameFor(model => model.HasProjector)
-                </label>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="HasComputers" /> @Html.DisplayNameFor(model => model.HasComputers)
-                </label>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsAvailable" /> @Html.DisplayNameFor(model => model.IsAvailable)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="Equipment" class="control-label"></label>
-                <input asp-for="Equipment" class="form-control" />
-                <span asp-validation-for="Equipment" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UpdatedAt" class="control-label"></label>
-                <input asp-for="UpdatedAt" class="form-control" />
-                <span asp-validation-for="UpdatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            <div class="room-form-actions">
+                <button type="submit" class="btn btn-primary">Create Room</button>
+                <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

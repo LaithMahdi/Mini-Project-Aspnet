@@ -1,95 +1,276 @@
 ﻿@model IEnumerable<school.Models.Room>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Rooms";
+
+    var search = ViewBag.Search as string;
+    var type = ViewBag.Type as school.Models.RoomType?;
+    var isAvailable = ViewBag.IsAvailable as bool?;
+    var typeOptions = ViewBag.RoomTypeOptions as SelectList;
+    var availabilityOptions = ViewBag.RoomAvailabilityOptions as SelectList;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var pageSize = ViewBag.PageSize as int? ?? 15;
+    var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
+    var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+    var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
+    var pageWindowStart = Math.Max(1, currentPage - 1);
+    var pageWindowEnd = Math.Min(totalPages, currentPage + 1);
 }
 
-<h1>Index</h1>
+<section class="rooms-page">
+    <div class="rooms-header">
+        <div>
+            <h1>Rooms Management</h1>
+            <p class="rooms-subtitle">Manage room allocation, equipment, and availability.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">+ Create New Room</a>
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Type)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Capacity)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Building)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Floor)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.HasProjector)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.HasComputers)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsAvailable)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Equipment)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedAt)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Type)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Capacity)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Building)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Floor)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.HasProjector)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.HasComputers)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsAvailable)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Equipment)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedAt)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+    <form asp-action="Index" method="get" class="rooms-filter-bar">
+        <div class="rooms-filter-group rooms-filter-search">
+            <label for="search">Search by room name</label>
+            <input id="search" name="search" value="@search" class="form-control" placeholder="Room, building, equipment" />
+        </div>
+
+        <div class="rooms-filter-group">
+            <label for="type">Type</label>
+            <select id="type" name="type" class="form-control" asp-items="typeOptions">
+                <option value="">All Types</option>
+            </select>
+        </div>
+
+        <div class="rooms-filter-group">
+            <label for="isAvailable">Availability</label>
+            <select id="isAvailable" name="isAvailable" class="form-control" asp-items="availabilityOptions">
+                <option value="">All</option>
+            </select>
+        </div>
+
+        <div class="rooms-filter-actions">
+            <button type="submit" class="btn btn-primary">Apply</button>
+            <a asp-action="Index" class="btn btn-outline-light">Clear</a>
+        </div>
+    </form>
+
+    <div class="rooms-table-wrap">
+        <table class="rooms-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Capacity</th>
+                    <th>Location</th>
+                    <th>Equipment</th>
+                    <th>Status</th>
+                    <th>Updated At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td><span class="rooms-type-chip">@item.Type</span></td>
+                        <td>@item.Capacity</td>
+                        <td>
+                            @(string.IsNullOrWhiteSpace(item.Building) ? "-" : item.Building)
+                            @if (item.Floor.HasValue)
+                            {
+                                <span class="rooms-floor-chip">Floor @item.Floor</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.HasProjector)
+                            {
+                                <span class="rooms-feature-chip">Projector</span>
+                            }
+                            @if (item.HasComputers)
+                            {
+                                <span class="rooms-feature-chip">Computers</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(item.Equipment))
+                            {
+                                <span class="rooms-feature-chip">@item.Equipment</span>
+                            }
+                            @if (!item.HasProjector && !item.HasComputers && string.IsNullOrWhiteSpace(item.Equipment))
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.IsAvailable)
+                            {
+                                <span class="rooms-status rooms-status-available">Available</span>
+                            }
+                            else
+                            {
+                                <span class="rooms-status rooms-status-unavailable">Unavailable</span>
+                            }
+                        </td>
+                        <td>@item.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        <td class="rooms-actions-cell">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="rooms-action rooms-action-edit">Edit</a>
+                            <button type="button"
+                                    class="rooms-action rooms-action-delete js-open-room-delete-dialog"
+                                    data-room-id="@item.Id"
+                                    data-room-name="@item.Name">
+                                Delete
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="rooms-pagination-wrap">
+        <div class="rooms-pagination-summary">
+            Showing @startItem-@endItem of @filteredTotal rooms
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <nav class="rooms-pagination" aria-label="Rooms pagination">
+                @if (currentPage > 1)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(currentPage - 1)"
+                       asp-route-search="@search"
+                       asp-route-type="@type"
+                       asp-route-isAvailable="@isAvailable"
+                       class="rooms-page-link">Previous</a>
+                }
+                else
+                {
+                    <span class="rooms-page-link rooms-page-link-disabled">Previous</span>
+                }
+
+                @if (pageWindowStart > 1)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="1"
+                       asp-route-search="@search"
+                       asp-route-type="@type"
+                       asp-route-isAvailable="@isAvailable"
+                       class="rooms-page-link">1</a>
+
+                    @if (pageWindowStart > 2)
+                    {
+                        <span class="rooms-page-ellipsis">...</span>
+                    }
+                }
+
+                @for (var i = pageWindowStart; i <= pageWindowEnd; i++)
+                {
+                    if (i == currentPage)
+                    {
+                        <span class="rooms-page-link rooms-page-link-active">@i</span>
+                    }
+                    else
+                    {
+                        <a asp-action="Index"
+                           asp-route-page="@i"
+                           asp-route-search="@search"
+                           asp-route-type="@type"
+                           asp-route-isAvailable="@isAvailable"
+                           class="rooms-page-link">@i</a>
+                    }
+                }
+
+                @if (pageWindowEnd < totalPages)
+                {
+                    @if (pageWindowEnd < totalPages - 1)
+                    {
+                        <span class="rooms-page-ellipsis">...</span>
+                    }
+
+                    <a asp-action="Index"
+                       asp-route-page="@totalPages"
+                       asp-route-search="@search"
+                       asp-route-type="@type"
+                       asp-route-isAvailable="@isAvailable"
+                       class="rooms-page-link">@totalPages</a>
+                }
+
+                @if (currentPage < totalPages)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(currentPage + 1)"
+                       asp-route-search="@search"
+                       asp-route-type="@type"
+                       asp-route-isAvailable="@isAvailable"
+                       class="rooms-page-link">Next</a>
+                }
+                else
+                {
+                    <span class="rooms-page-link rooms-page-link-disabled">Next</span>
+                }
+            </nav>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="rooms-empty-state" role="alert">
+            No rooms found. <a asp-action="Create">Create the first room</a>
+        </div>
+    }
+</section>
+
+<dialog id="deleteRoomDialog" class="rooms-delete-dialog">
+    <div class="rooms-delete-dialog-card">
+        <div class="rooms-delete-dialog-head">
+            <h3>Delete Room</h3>
+            <button type="button" class="rooms-delete-dialog-close" id="closeRoomDeleteDialogBtn" aria-label="Close">&times;</button>
+        </div>
+
+        <p class="rooms-delete-dialog-text">
+            Are you sure you want to delete <strong id="deleteRoomNameText">this room</strong>? This action cannot be undone.
+        </p>
+
+        <form asp-action="Delete" method="post" class="rooms-delete-dialog-actions">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="deleteRoomIdInput" name="id" />
+            <button type="submit" class="btn btn-danger">Delete Permanently</button>
+            <button type="button" class="btn btn-outline-light" id="cancelRoomDeleteDialogBtn">Cancel</button>
+        </form>
+    </div>
+</dialog>
+
+@section Scripts {
+    <script>
+        (function () {
+            const dialog = document.getElementById('deleteRoomDialog');
+            const roomIdInput = document.getElementById('deleteRoomIdInput');
+            const roomNameText = document.getElementById('deleteRoomNameText');
+            const cancelBtn = document.getElementById('cancelRoomDeleteDialogBtn');
+            const closeBtn = document.getElementById('closeRoomDeleteDialogBtn');
+            const openBtns = document.querySelectorAll('.js-open-room-delete-dialog');
+
+            if (!dialog || !roomIdInput || !roomNameText || !cancelBtn || !closeBtn || !openBtns.length) {
+                return;
+            }
+
+            openBtns.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const roomId = btn.getAttribute('data-room-id');
+                    const roomName = btn.getAttribute('data-room-name') || 'this room';
+
+                    roomIdInput.value = roomId || '';
+                    roomNameText.textContent = roomName;
+                    dialog.showModal();
+                });
+            });
+
+            cancelBtn.addEventListener('click', function () {
+                dialog.close();
+            });
+
+            closeBtn.addEventListener('click', function () {
+                dialog.close();
+            });
+        })();
+    </script>
 }
-    </tbody>
-</table>
