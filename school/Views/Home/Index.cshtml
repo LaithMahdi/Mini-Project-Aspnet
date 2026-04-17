@@ -1,8 +1,148 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model school.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="admin-dashboard-page">
+    <div class="admin-dashboard-hero">
+        <div>
+            <p class="admin-dashboard-eyebrow">School Control Center</p>
+            <h1>Admin Dashboard</h1>
+            <p class="admin-dashboard-subtitle">Track activity, monitor sessions, and jump quickly into core modules.</p>
+        </div>
+        <div class="admin-dashboard-hero-actions">
+            <a asp-controller="Sessions" asp-action="Create" class="btn btn-primary">+ New Session</a>
+            <a asp-controller="Users" asp-action="Create" class="btn btn-outline-light">+ New User</a>
+        </div>
+    </div>
+
+    <div class="admin-kpi-grid">
+        <article class="admin-kpi-card">
+            <p>Total Users</p>
+            <strong>@Model.TotalUsers</strong>
+            <a asp-controller="Users" asp-action="Index">Manage users</a>
+        </article>
+
+        <article class="admin-kpi-card">
+            <p>Teachers</p>
+            <strong>@Model.TotalTeachers</strong>
+            <a asp-controller="Teachers" asp-action="Index">View teachers</a>
+        </article>
+
+        <article class="admin-kpi-card">
+            <p>Students</p>
+            <strong>@Model.TotalStudents</strong>
+            <a asp-controller="Students" asp-action="Index">View students</a>
+        </article>
+
+        <article class="admin-kpi-card">
+            <p>Classes</p>
+            <strong>@Model.TotalClasses</strong>
+            <a asp-controller="Classes" asp-action="Index">Open classes</a>
+        </article>
+
+        <article class="admin-kpi-card">
+            <p>Sessions</p>
+            <strong>@Model.TotalSessions</strong>
+            <a asp-controller="Sessions" asp-action="Index">Open sessions</a>
+        </article>
+
+        <article class="admin-kpi-card">
+            <p>Available Rooms</p>
+            <strong>@Model.AvailableRooms</strong>
+            <a asp-controller="Rooms" asp-action="Index">Check rooms</a>
+        </article>
+    </div>
+
+    <div class="admin-dashboard-grid">
+        <section class="admin-panel admin-status-panel">
+            <div class="admin-panel-head">
+                <h2>Session Status Overview</h2>
+                <a asp-controller="Sessions" asp-action="Index">Details</a>
+            </div>
+            <div class="admin-status-list">
+                <div class="admin-status-item">
+                    <span class="admin-status-chip admin-status-planned">Planned & Active</span>
+                    <strong>@Model.ActiveSessions</strong>
+                </div>
+                <div class="admin-status-item">
+                    <span class="admin-status-chip admin-status-cancelled">Cancelled</span>
+                    <strong>@Model.CancelledSessions</strong>
+                </div>
+                <div class="admin-status-item">
+                    <span class="admin-status-chip admin-status-postponed">Postponed</span>
+                    <strong>@Model.PostponedSessions</strong>
+                </div>
+                <div class="admin-status-item">
+                    <span class="admin-status-chip admin-status-subject">Active Subjects</span>
+                    <strong>@Model.ActiveSubjects</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-panel admin-quick-actions-panel">
+            <div class="admin-panel-head">
+                <h2>Quick Actions</h2>
+            </div>
+            <div class="admin-quick-actions">
+                <a asp-controller="Sessions" asp-action="Create">Create Session</a>
+                <a asp-controller="Classes" asp-action="Create">Create Class</a>
+                <a asp-controller="Rooms" asp-action="Create">Create Room</a>
+                <a asp-controller="Subjects" asp-action="Create">Create Subject</a>
+                <a asp-controller="Teachers" asp-action="Create">Create Teacher</a>
+                <a asp-controller="Students" asp-action="Create">Create Student</a>
+            </div>
+        </section>
+    </div>
+
+    <section class="admin-panel admin-latest-panel">
+        <div class="admin-panel-head">
+            <h2>Latest Sessions</h2>
+            <a asp-controller="Sessions" asp-action="Index">View all</a>
+        </div>
+
+        @if (Model.LatestSessions.Any())
+        {
+            <div class="admin-latest-table-wrap">
+                <table class="admin-latest-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Teacher</th>
+                            <th>Subject</th>
+                            <th>Room</th>
+                            <th>Status</th>
+                            <th>Open</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var session in Model.LatestSessions)
+                        {
+                            <tr>
+                                <td>@session.SessionDate.ToString("dd/MM/yyyy")</td>
+                                <td>@session.StartTime.ToString("HH:mm") - @session.EndTime.ToString("HH:mm")</td>
+                                <td>@session.TeacherName</td>
+                                <td>@session.SubjectName</td>
+                                <td>@session.RoomName</td>
+                                <td>
+                                    <span class="admin-status-chip admin-status-@session.Status.ToString().ToLower()">@session.Status</span>
+                                </td>
+                                <td>
+                                    <a asp-controller="Sessions" asp-action="Details" asp-route-id="@session.Id" class="admin-open-link">Details</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="admin-empty-state" role="alert">
+                No sessions available yet. <a asp-controller="Sessions" asp-action="Create">Create first session</a>
+            </div>
+        }
+    </section>
+</section>
