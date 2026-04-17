@@ -10,75 +10,64 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body class="bg-slate-100">
+<body class="app-body">
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var isAuthenticated = User.Identity?.IsAuthenticated == true;
     }
-<div class="flex min-h-screen">
-
-    <!-- Sidebar -->
-    <aside class="fixed top-0 left-0 h-screen w-64 bg-slate-900 text-slate-100 flex flex-col">
-
-        <!-- Top (Logo) -->
-        <div class="p-5 border-b border-slate-800">
-            <a class="text-2xl font-bold text-white" asp-controller="Home" asp-action="Index">
-                School
-            </a>
-        </div>
-
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <!-- User Info -->
-            <div class="p-4">
-                <div class="bg-slate-800 rounded-xl p-3 text-sm">
-                    <div class="text-slate-400">Connected as</div>
-                    <div class="font-semibold text-white">@User.Identity.Name</div>
-                </div>
+<div class="app-layout">
+    @if (isAuthenticated)
+    {
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="fa-solid fa-school"></i>
+                    <span>School Management</span>
+                </a>
             </div>
 
-            <!-- 🔥 Scrollable Menu ONLY -->
-            <nav class="flex-1 overflow-hidden px-3 space-y-1">
-
+            <nav class="sidebar-scroll">
                 @{
-                    Func<string, string> isActive = (controller) =>
+                    Func<string, string> navClass = (controller) =>
                         currentController == controller
-                        ? "bg-indigo-600 text-white"
-                        : "text-slate-300 hover:bg-slate-800";
+                        ? "sidebar-nav-link sidebar-nav-link-active"
+                        : "sidebar-nav-link sidebar-nav-link-idle";
                 }
 
-                <a class="block px-3 py-2 rounded-lg @isActive("Home")" asp-controller="Home" asp-action="Index">Dashboard</a>
-                <a class="block px-3 py-2 rounded-lg @isActive("Users")" asp-controller="Users" asp-action="Index">Users</a>
-                <a class="block px-3 py-2 rounded-lg @isActive("Sections")" asp-controller="Sections" asp-action="Index">Sections</a>
-                <a class="block px-3 py-2 rounded-lg @isActive("Classes")" asp-controller="Classes" asp-action="Index">Classes</a>
-                <a class="block px-3 py-2 rounded-lg @isActive("Subjects")" asp-controller="Subjects" asp-action="Index">Subjects</a>
-                <a class="block px-3 py-2 rounded-lg @isActive("Rooms")" asp-controller="Rooms" asp-action="Index">Rooms</a>
-                <a class="block px-3 py-2 rounded-lg @isActive("Sessions")" asp-controller="Sessions" asp-action="Index">Sessions</a>
-
+                <a class="@navClass("Home")" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+                <a class="@navClass("Users")" asp-controller="Users" asp-action="Index"><i class="fa-solid fa-users-gear"></i><span>Users</span></a>
+                <a class="@navClass("Sections")" asp-controller="Sections" asp-action="Index"><i class="fa-solid fa-layer-group"></i><span>Sections</span></a>
+                <a class="@navClass("Classes")" asp-controller="Classes" asp-action="Index"><i class="fa-solid fa-chalkboard"></i><span>Classes</span></a>
+                <a class="@navClass("Subjects")" asp-controller="Subjects" asp-action="Index"><i class="fa-solid fa-book-open"></i><span>Subjects</span></a>
+                <a class="@navClass("Rooms")" asp-controller="Rooms" asp-action="Index"><i class="fa-solid fa-door-open"></i><span>Rooms</span></a>
+                <a class="@navClass("Sessions")" asp-controller="Sessions" asp-action="Index"><i class="fa-solid fa-calendar-days"></i><span>Sessions</span></a>
+                <a class="@navClass("Students")" asp-controller="Students" asp-action="Index"><i class="fa-solid fa-user-graduate"></i><span>Students</span></a>
+                <a class="@navClass("Teachers")" asp-controller="Teachers" asp-action="Index"><i class="fa-solid fa-chalkboard-user"></i><span>Teachers</span></a>
             </nav>
 
-            <!-- Bottom (Logout always visible) -->
-            <div class="p-4 border-t border-slate-800">
-                <form asp-controller="Account" asp-action="Logout" method="post">
+            <div class="sidebar-footer">
+                <div class="sidebar-user-card">
+                    <div class="sidebar-user-role">Connected User</div>
+                    <div class="sidebar-user-name">@User.Identity?.Name</div>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="sidebar-logout-form">
                     @Html.AntiForgeryToken()
-                    <button class="w-full px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm">
-                        Logout
+                    <button class="sidebar-logout-btn" type="submit">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
                     </button>
                 </form>
             </div>
-        }
-    </aside>
+        </aside>
+    }
 
-    <!-- Main Content -->
-    <div class="ml-64 flex-1 h-screen overflow-y-auto">
-
-        <div class="p-6 lg:p-10 pb-12">
-            <main class="bg-white rounded-2xl shadow-sm p-6">
+    <div class="app-main @(isAuthenticated ? "app-main-with-sidebar" : "app-main-full")">
+        <main class="main-scroll-area">
+            <section class="content-shell">
                 @RenderBody()
-            </main>
-        </div>
-
+            </section>
+        </main>
     </div>
-
 </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
