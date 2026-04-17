@@ -1,4 +1,8 @@
 ﻿@model school.Models.Classe
+@using school.Models
+@{
+    var assignments = ViewData["ClassSubjectAssignments"] as List<ClassSubject> ?? new List<ClassSubject>();
+}
 
 @{
     ViewData["Title"] = "Update Class";
@@ -81,6 +85,96 @@
             <div class="class-form-actions">
                 <button type="submit" class="btn btn-primary">Save Changes</button>
                 <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="class-form-shell">
+        <h3>Subject Assignments</h3>
+
+        @if (TempData["ClassEditError"] != null)
+        {
+            <div class="class-validation" role="alert">@TempData["ClassEditError"]</div>
+        }
+
+        <form asp-action="AddSubjectAssignment" method="post" class="class-form-grid">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+
+            <div class="class-form-fields">
+                <div class="form-group">
+                    <label class="control-label">Subject</label>
+                    <select name="subjectId" class="form-control" asp-items="ViewBag.SubjectOptions"></select>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label">Teacher</label>
+                    <select name="teacherId" class="form-control" asp-items="ViewBag.TeacherOptions">
+                        <option value="">-- Select Teacher --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="class-form-actions">
+                <button type="submit" class="btn btn-primary">Add / Update Assignment</button>
+            </div>
+        </form>
+
+        @if (assignments.Any())
+        {
+            <div class="classes-table-wrap mt-3">
+                <table class="classes-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Teacher</th>
+                            <th>Assigned At</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var assignment in assignments)
+                        {
+                            <tr>
+                                <td>@assignment.Subject.Name (@assignment.Subject.Code)</td>
+                                <td>@(assignment.Teacher?.User?.FullName ?? "-")</td>
+                                <td>@assignment.AssignedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <form asp-action="RemoveSubjectAssignment" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="classSubjectId" value="@assignment.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="classes-empty-state mt-3">No subject assignment yet for this class.</div>
+        }
+    </div>
+
+    <div class="class-form-shell">
+        <h3>Student List Assignment</h3>
+        <p class="class-form-subtitle">Select active students to affect to this class. Selected students become members of this class.</p>
+
+        <form asp-action="UpdateStudentAssignments" method="post" class="class-form-grid">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+
+            <div class="form-group">
+                <label class="control-label">Students</label>
+                <select name="studentIds" class="form-control" asp-items="ViewBag.ClassStudentOptions" multiple size="12"></select>
+                <small class="text-muted">Tip: hold Ctrl (or Cmd) to select multiple students.</small>
+            </div>
+
+            <div class="class-form-actions">
+                <button type="submit" class="btn btn-primary">Update Student List</button>
             </div>
         </form>
     </div>

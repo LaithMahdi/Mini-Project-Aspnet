@@ -49,11 +49,62 @@
                 <dl class="class-details-list">
                     <div><dt>Section</dt><dd>@(Model.Section?.Name ?? "-")</dd></div>
                     <div><dt>Referent Teacher</dt><dd>@(Model.ReferentTeacher?.User?.FullName ?? "-")</dd></div>
+                    <div><dt>Students</dt><dd>@Model.Students.Count</dd></div>
+                    <div><dt>Subjects</dt><dd>@Model.ClassSubjects.Count</dd></div>
                     <div><dt>Created</dt><dd>@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</dd></div>
                     <div><dt>Updated</dt><dd>@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm")</dd></div>
                     <div><dt>Class Id</dt><dd class="detail-code">@Model.Id</dd></div>
                 </dl>
             </section>
         </div>
+
+        <section class="class-details-card">
+            <h3>Students in Class</h3>
+            @if (Model.Students.Any())
+            {
+                <ul>
+                    @foreach (var student in Model.Students.OrderBy(s => s.User.FullName))
+                    {
+                        <li>@student.User.FullName (@student.User.UserName)</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="mb-0">No students assigned.</p>
+            }
+        </section>
+
+        <section class="class-details-card">
+            <h3>Subject - Teacher Map</h3>
+            @if (Model.ClassSubjects.Any())
+            {
+                <div class="classes-table-wrap">
+                    <table class="classes-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Teacher</th>
+                                <th>Assigned At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cs in Model.ClassSubjects.OrderBy(x => x.Subject.Name))
+                            {
+                                <tr>
+                                    <td>@cs.Subject.Name (@cs.Subject.Code)</td>
+                                    <td>@(cs.Teacher?.User?.FullName ?? "-")</td>
+                                    <td>@cs.AssignedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="mb-0">No subjects linked to this class yet.</p>
+            }
+        </section>
     </div>
 </section>

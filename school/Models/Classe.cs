@@ -22,6 +22,7 @@ namespace school.Models
         public Teacher? ReferentTeacher { get; set; }
 
         // Navigation
+        public ICollection<Student> Students { get; set; } = new List<Student>();
         public ICollection<ClassSubject> ClassSubjects { get; set; } = new List<ClassSubject>();
     }
 }

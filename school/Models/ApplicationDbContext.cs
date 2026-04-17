@@ -55,6 +55,16 @@ namespace school.Models
             modelBuilder.Entity<Teacher>()
                 .Property(t => t.Salary)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Student>()
+                .HasOne(s => s.Class)
+                .WithMany(c => c.Students)
+                .HasForeignKey(s => s.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ClassSubject>()
+                .HasIndex(cs => new { cs.ClassId, cs.SubjectId })
+                .IsUnique();
         }
 
         private void ApplyTimestamps()

@@ -21,7 +21,9 @@ namespace school.Controllers
         // GET: Students
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Students.Include(s => s.User);
+            var applicationDbContext = _context.Students
+                .Include(s => s.User)
+                .Include(s => s.Class);
             return View(await applicationDbContext.ToListAsync());
         }
 
@@ -35,6 +37,7 @@ namespace school.Controllers
 
             var student = await _context.Students
                 .Include(s => s.User)
+                .Include(s => s.Class)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (student == null)
             {
@@ -47,7 +50,8 @@ namespace school.Controllers
         // GET: Students/Create
         public IActionResult Create()
         {
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName");
+            ViewData["ClassId"] = new SelectList(_context.Classes.OrderBy(c => c.Name), "Id", "Name");
             return View();
         }
 
@@ -56,7 +60,7 @@ namespace school.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,DateOfBirth,Gender,CinNumber,PhoneNumber,SecondPhoneNumber,Address,IsActive,EnrollmentDate,UserId")] Student student)
+        public async Task<IActionResult> Create([Bind("Id,DateOfBirth,Gender,CinNumber,PhoneNumber,SecondPhoneNumber,Address,IsActive,EnrollmentDate,UserId,ClassId")] Student student)
         {
             if (ModelState.IsValid)
             {
@@ -65,7 +69,8 @@ namespace school.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", student.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", student.UserId);
+            ViewData["ClassId"] = new SelectList(_context.Classes.OrderBy(c => c.Name), "Id", "Name", student.ClassId);
             return View(student);
         }
 
@@ -82,7 +87,8 @@ namespace school.Controllers
             {
                 return NotFound();
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", student.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", student.UserId);
+            ViewData["ClassId"] = new SelectList(_context.Classes.OrderBy(c => c.Name), "Id", "Name", student.ClassId);
             return View(student);
         }
 
@@ -91,7 +97,7 @@ namespace school.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,DateOfBirth,Gender,CinNumber,PhoneNumber,SecondPhoneNumber,Address,IsActive,EnrollmentDate,UserId")] Student student)
+        public async Task<IActionResult> Edit(Guid id, [Bind("Id,DateOfBirth,Gender,CinNumber,PhoneNumber,SecondPhoneNumber,Address,IsActive,EnrollmentDate,UserId,ClassId")] Student student)
         {
             if (id != student.Id)
             {
@@ -118,7 +124,8 @@ namespace school.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", student.UserId);
+            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", student.UserId);
+            ViewData["ClassId"] = new SelectList(_context.Classes.OrderBy(c => c.Name), "Id", "Name", student.ClassId);
             return View(student);
         }
 
@@ -132,6 +139,7 @@ namespace school.Controllers
 
             var student = await _context.Students
                 .Include(s => s.User)
+                .Include(s => s.Class)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (student == null)
             {

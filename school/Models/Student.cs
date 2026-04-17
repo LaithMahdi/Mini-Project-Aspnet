@@ -38,7 +38,10 @@ namespace school.Models
         [Required]
         public Guid UserId { get; set; }
 
+        public Guid? ClassId { get; set; }
+
         // Navigation Property
         public User User { get; set; } = null!;
+        public Classe? Class { get; set; }
     }
 }

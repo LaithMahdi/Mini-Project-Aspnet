@@ -112,6 +112,13 @@ namespace school.Controllers
                 .Include(c => c.ReferentTeacher)
                     .ThenInclude(t => t.User)
                 .Include(c => c.Section)
+                .Include(c => c.Students)
+                    .ThenInclude(s => s.User)
+                .Include(c => c.ClassSubjects)
+                    .ThenInclude(cs => cs.Subject)
+                .Include(c => c.ClassSubjects)
+                    .ThenInclude(cs => cs.Teacher)
+                        .ThenInclude(t => t.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (classe == null)
             {
@@ -163,6 +170,9 @@ namespace school.Controllers
                 return NotFound();
             }
             PopulateSelectLists(classe.SectionId, classe.ReferentTeacherId);
+            await PopulateAssignmentSelectLists();
+            await PopulateExistingAssignments(classe.Id);
+            await PopulateStudentAssignmentSelectList(classe.Id);
             return View(classe);
         }
 
@@ -213,7 +223,114 @@ namespace school.Controllers
                 return RedirectToAction(nameof(Index));
             }
             PopulateSelectLists(classe.SectionId, classe.ReferentTeacherId);
+            await PopulateAssignmentSelectLists();
+            await PopulateExistingAssignments(classe.Id);
+            await PopulateStudentAssignmentSelectList(classe.Id);
             return View(classe);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStudentAssignments(Guid id, List<Guid>? studentIds)
+        {
+            var classeExists = await _context.Classes.AnyAsync(c => c.Id == id);
+            if (!classeExists)
+            {
+                return NotFound();
+            }
+
+            var selectedSet = (studentIds ?? new List<Guid>()).ToHashSet();
+
+            var studentsInClass = await _context.Students
+                .Where(s => s.ClassId == id)
+                .ToListAsync();
+
+            foreach (var student in studentsInClass.Where(s => !selectedSet.Contains(s.Id)))
+            {
+                student.ClassId = null;
+            }
+
+            var assignableSelectedStudents = await _context.Students
+                .Where(s => selectedSet.Contains(s.Id) && s.IsActive && (s.ClassId == null || s.ClassId == id))
+                .ToListAsync();
+
+            foreach (var student in assignableSelectedStudents)
+            {
+                student.ClassId = id;
+            }
+
+            var blockedCount = await _context.Students
+                .CountAsync(s => selectedSet.Contains(s.Id) && s.ClassId != null && s.ClassId != id);
+
+            if (blockedCount > 0)
+            {
+                TempData["ClassEditError"] = $"{blockedCount} selected student(s) are already assigned to another class. Remove them from their current class first.";
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddSubjectAssignment(Guid id, int subjectId, Guid? teacherId)
+        {
+            if (teacherId == null)
+            {
+                TempData["ClassEditError"] = "Please select a teacher for the subject assignment.";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            var classeExists = await _context.Classes.AnyAsync(c => c.Id == id);
+            if (!classeExists)
+            {
+                return NotFound();
+            }
+
+            var subjectExists = await _context.Subjects.AnyAsync(s => s.Id == subjectId && s.IsActive);
+            var teacherExists = await _context.Teachers.AnyAsync(t => t.Id == teacherId && t.IsActive);
+
+            if (!subjectExists || !teacherExists)
+            {
+                TempData["ClassEditError"] = "Invalid subject or teacher selection.";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            var existing = await _context.ClassSubjects
+                .FirstOrDefaultAsync(cs => cs.ClassId == id && cs.SubjectId == subjectId);
+
+            if (existing == null)
+            {
+                _context.ClassSubjects.Add(new ClassSubject
+                {
+                    ClassId = id,
+                    SubjectId = subjectId,
+                    TeacherId = teacherId
+                });
+            }
+            else
+            {
+                existing.TeacherId = teacherId;
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveSubjectAssignment(Guid id, int classSubjectId)
+        {
+            var assignment = await _context.ClassSubjects
+                .FirstOrDefaultAsync(cs => cs.Id == classSubjectId && cs.ClassId == id);
+
+            if (assignment != null)
+            {
+                _context.ClassSubjects.Remove(assignment);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Edit), new { id });
         }
 
         // GET: Classes/Delete/5
@@ -276,6 +393,63 @@ namespace school.Controllers
 
             ViewData["SectionId"] = new SelectList(sections, "Id", "Display", sectionId);
             ViewData["ReferentTeacherId"] = new SelectList(teachers, "Id", "Display", referentTeacherId);
+        }
+
+        private async Task PopulateAssignmentSelectLists(int? subjectId = null, Guid? teacherId = null)
+        {
+            var subjects = await _context.Subjects
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.Name)
+                .Select(s => new { s.Id, Display = s.Name + " (" + s.Code + ")" })
+                .ToListAsync();
+
+            var teachers = await _context.Teachers
+                .Include(t => t.User)
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.User.FullName)
+                .Select(t => new
+                {
+                    t.Id,
+                    Display = t.User.FullName + (string.IsNullOrWhiteSpace(t.Specialization) ? string.Empty : " - " + t.Specialization)
+                })
+                .ToListAsync();
+
+            ViewData["SubjectOptions"] = new SelectList(subjects, "Id", "Display", subjectId);
+            ViewData["TeacherOptions"] = new SelectList(teachers, "Id", "Display", teacherId);
+        }
+
+        private async Task PopulateExistingAssignments(Guid classId)
+        {
+            var assignments = await _context.ClassSubjects
+                .Include(cs => cs.Subject)
+                .Include(cs => cs.Teacher)
+                    .ThenInclude(t => t.User)
+                .Where(cs => cs.ClassId == classId)
+                .OrderBy(cs => cs.Subject.Name)
+                .ToListAsync();
+
+            ViewData["ClassSubjectAssignments"] = assignments;
+        }
+
+        private async Task PopulateStudentAssignmentSelectList(Guid classId)
+        {
+            var students = await _context.Students
+                .Include(s => s.User)
+                .Where(s => s.IsActive && (s.ClassId == null || s.ClassId == classId))
+                .OrderBy(s => s.User.FullName)
+                .Select(s => new
+                {
+                    s.Id,
+                    Display = s.User.FullName + (s.ClassId == classId ? " (Assigned)" : "")
+                })
+                .ToListAsync();
+
+            var selectedIds = await _context.Students
+                .Where(s => s.ClassId == classId)
+                .Select(s => s.Id)
+                .ToListAsync();
+
+            ViewData["ClassStudentOptions"] = new MultiSelectList(students, "Id", "Display", selectedIds);
         }
     }
 }
