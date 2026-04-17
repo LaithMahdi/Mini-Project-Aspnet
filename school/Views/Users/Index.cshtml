@@ -3,6 +3,20 @@
 
 @{
     ViewData["Title"] = "Users";
+    var search = ViewBag.Search as string;
+    Role? roleFilter = ViewBag.RoleFilter as Role?;
+    bool? activeFilter = ViewBag.IsActiveFilter as bool?;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var pageSize = ViewBag.PageSize as int? ?? 15;
+    var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
+    var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
+    var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
+
+    var totalUsers = ViewBag.FilteredTotal as int? ?? 0;
+    var activeUsers = ViewBag.ActiveCount as int? ?? 0;
+    var studentsCount = ViewBag.StudentsCount as int? ?? 0;
+    var teachersCount = ViewBag.TeachersCount as int? ?? 0;
 
     Func<string, DateTime?, string> generateStudentId = (fullName, dateOfBirth) =>
     {
@@ -25,15 +39,114 @@
     };
 }
 
-<h1>Users Management</h1>
+<section class="users-page">
+    <div class="users-header">
+        <div>
+            <h1>Users Management</h1>
+            <p class="users-subtitle">Manage accounts, filter by role and status, and keep records clean.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">+ Create New User</a>
+    </div>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">+ Create New User</a>
-</p>
+    <div class="users-stats-grid">
+        <div class="users-stat-card">
+            <div class="users-stat-label">Total Users</div>
+            <div class="users-stat-value">@totalUsers</div>
+        </div>
+        <div class="users-stat-card">
+            <div class="users-stat-label">Active</div>
+            <div class="users-stat-value">@activeUsers</div>
+        </div>
+        <div class="users-stat-card">
+            <div class="users-stat-label">Students</div>
+            <div class="users-stat-value">@studentsCount</div>
+        </div>
+        <div class="users-stat-card">
+            <div class="users-stat-label">Teachers</div>
+            <div class="users-stat-value">@teachersCount</div>
+        </div>
+    </div>
 
-<div class="table-responsive">
-    <table class="table table-hover">
-        <thead class="table-dark">
+    <form asp-action="Index" method="get" class="users-filter-bar">
+        <div class="users-filter-group users-filter-search">
+            <label for="search">Search</label>
+            <input id="search" name="search" value="@search" class="form-control" placeholder="Name, username, email, phone" />
+        </div>
+
+        <div class="users-filter-group">
+            <label for="role">Role</label>
+            <select id="role" name="role" class="form-control">
+                <option value="">All roles</option>
+                @if (roleFilter == Role.Admin)
+                {
+                    <option value="Admin" selected>Admin</option>
+                }
+                else
+                {
+                    <option value="Admin">Admin</option>
+                }
+
+                @if (roleFilter == Role.Teacher)
+                {
+                    <option value="Teacher" selected>Teacher</option>
+                }
+                else
+                {
+                    <option value="Teacher">Teacher</option>
+                }
+
+                @if (roleFilter == Role.Student)
+                {
+                    <option value="Student" selected>Student</option>
+                }
+                else
+                {
+                    <option value="Student">Student</option>
+                }
+            </select>
+        </div>
+
+        <div class="users-filter-group">
+            <label for="isActive">Status</label>
+            <select id="isActive" name="isActive" class="form-control">
+                @if (activeFilter == null)
+                {
+                    <option value="" selected>All statuses</option>
+                }
+                else
+                {
+                    <option value="">All statuses</option>
+                }
+
+                @if (activeFilter == true)
+                {
+                    <option value="true" selected>Active</option>
+                }
+                else
+                {
+                    <option value="true">Active</option>
+                }
+
+                @if (activeFilter == false)
+                {
+                    <option value="false" selected>Inactive</option>
+                }
+                else
+                {
+                    <option value="false">Inactive</option>
+                }
+            </select>
+        </div>
+
+        <div class="users-filter-actions">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a asp-action="Index" class="btn btn-outline-light">Clear</a>
+        </div>
+    </form>
+
+    <div class="users-table-wrap">
+        <table class="users-table">
+        <thead>
             <tr>
                 <th>Full Name</th>
                 <th>Role</th>
@@ -52,7 +165,7 @@
                 <tr>
                     <td>@Html.DisplayFor(modelItem => item.FullName)</td>
                     <td>
-                        <span class="badge @(item.Role == Role.Student ? "bg-info" : item.Role == Role.Teacher ? "bg-warning" : "bg-danger")">
+                        <span class="users-role-badge @(item.Role == Role.Student ? "users-role-student" : item.Role == Role.Teacher ? "users-role-teacher" : "users-role-admin")">
                             @Html.DisplayFor(modelItem => item.Role)
                         </span>
                     </td>
@@ -73,17 +186,17 @@
                     <td>
                         @if (item.IsActive)
                         {
-                            <span class="badge bg-success">Active</span>
+                            <span class="users-status users-status-active">Active</span>
                         }
                         else
                         {
-                            <span class="badge bg-secondary">Inactive</span>
+                            <span class="users-status users-status-inactive">Inactive</span>
                         }
                     </td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">View</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                    <td class="users-actions-cell">
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="users-action users-action-edit">Edit</a>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="users-action users-action-view">View</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="users-action users-action-delete">Delete</a>
                     </td>
                 </tr>
             }
@@ -91,9 +204,66 @@
     </table>
 </div>
 
+<div class="users-pagination-wrap">
+    <div class="users-pagination-summary">
+        Showing @startItem-@endItem of @filteredTotal users
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav class="users-pagination" aria-label="Users pagination">
+            @if (currentPage > 1)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@(currentPage - 1)"
+                   asp-route-search="@search"
+                   asp-route-role="@roleFilter"
+                   asp-route-isActive="@activeFilter"
+                   class="users-page-link">Previous</a>
+            }
+            else
+            {
+                <span class="users-page-link users-page-link-disabled">Previous</span>
+            }
+
+            @for (var i = 1; i <= totalPages; i++)
+            {
+                if (i == currentPage)
+                {
+                    <span class="users-page-link users-page-link-active">@i</span>
+                }
+                else
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-search="@search"
+                       asp-route-role="@roleFilter"
+                       asp-route-isActive="@activeFilter"
+                       class="users-page-link">@i</a>
+                }
+            }
+
+            @if (currentPage < totalPages)
+            {
+                <a asp-action="Index"
+                   asp-route-page="@(currentPage + 1)"
+                   asp-route-search="@search"
+                   asp-route-role="@roleFilter"
+                   asp-route-isActive="@activeFilter"
+                   class="users-page-link">Next</a>
+            }
+            else
+            {
+                <span class="users-page-link users-page-link-disabled">Next</span>
+            }
+        </nav>
+    }
+</div>
+
 @if (!Model.Any())
 {
-    <div class="alert alert-info" role="alert">
+    <div class="users-empty-state" role="alert">
         No users found. <a asp-action="Create">Create the first user</a>
     </div>
 }
+</section>

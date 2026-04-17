@@ -19,12 +19,70 @@ namespace school.Controllers
         }
 
         // GET: Users
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, Role? role, bool? isActive, int page = 1)
         {
-            var users = await _context.Users
+            const int pageSize = 15;
+
+            var usersQuery = _context.Users
                 .Include(u => u.Student)
                 .Include(u => u.Teacher)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+                usersQuery = usersQuery.Where(u =>
+                    u.FullName.ToLower().Contains(term) ||
+                    (u.UserName != null && u.UserName.ToLower().Contains(term)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(term)) ||
+                    (u.PhoneNumber != null && u.PhoneNumber.ToLower().Contains(term)));
+            }
+
+            if (role.HasValue)
+            {
+                usersQuery = usersQuery.Where(u => u.Role == role.Value);
+            }
+
+            if (isActive.HasValue)
+            {
+                usersQuery = usersQuery.Where(u => u.IsActive == isActive.Value);
+            }
+
+            var filteredTotal = await usersQuery.CountAsync();
+            var activeCount = await usersQuery.CountAsync(u => u.IsActive);
+            var studentsCount = await usersQuery.CountAsync(u => u.Role == Role.Student);
+            var teachersCount = await usersQuery.CountAsync(u => u.Role == Role.Teacher);
+
+            var totalPages = filteredTotal == 0
+                ? 1
+                : (int)Math.Ceiling(filteredTotal / (double)pageSize);
+
+            if (page < 1)
+            {
+                page = 1;
+            }
+            else if (page > totalPages)
+            {
+                page = totalPages;
+            }
+
+            var users = await usersQuery
+                .OrderBy(u => u.FullName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            ViewBag.Search = search;
+            ViewBag.RoleFilter = role;
+            ViewBag.IsActiveFilter = isActive;
+            ViewBag.CurrentPage = page;
+            ViewBag.PageSize = pageSize;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.FilteredTotal = filteredTotal;
+            ViewBag.ActiveCount = activeCount;
+            ViewBag.StudentsCount = studentsCount;
+            ViewBag.TeachersCount = teachersCount;
+
             return View(users);
         }
 
@@ -132,22 +190,45 @@ namespace school.Controllers
                 return NotFound();
             }
 
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users
+                .Include(u => u.Teacher)
+                .Include(u => u.Student)
+                .FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
             {
                 return NotFound();
             }
 
+            var model = new UserEditViewModel
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Role = user.Role,
+                Gender = user.Gender,
+                IsActive = user.IsActive,
+                UserName = user.UserName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Specialization = user.Teacher?.Specialization,
+                HireDate = user.Teacher?.HireDate,
+                Salary = user.Teacher?.Salary,
+                DateOfBirth = user.Student?.DateOfBirth,
+                CinNumber = user.Student?.CinNumber,
+                SecondPhoneNumber = user.Student?.SecondPhoneNumber,
+                Address = user.Student?.Address,
+                EnrollmentDate = user.Student?.EnrollmentDate
+            };
+
             PopulateSelectLists();
-            return View(user);
+            return View(model);
         }
 
         // POST: Users/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,FullName,Role,Gender,IsActive,UserName,Email,PhoneNumber")] User user)
+        public async Task<IActionResult> Edit(Guid id, UserEditViewModel model)
         {
-            if (id != user.Id)
+            if (id != model.Id)
             {
                 return NotFound();
             }
@@ -156,26 +237,96 @@ namespace school.Controllers
             {
                 try
                 {
-                    var existingUser = await _context.Users.FindAsync(id);
+                    var existingUser = await _context.Users
+                        .Include(u => u.Teacher)
+                        .Include(u => u.Student)
+                        .FirstOrDefaultAsync(u => u.Id == id);
+
                     if (existingUser == null)
                     {
                         return NotFound();
                     }
 
-                    existingUser.FullName = user.FullName;
-                    existingUser.Role = user.Role;
-                    existingUser.Gender = user.Gender;
-                    existingUser.IsActive = user.IsActive;
-                    existingUser.UserName = user.UserName;
-                    existingUser.Email = user.Email;
-                    existingUser.PhoneNumber = user.PhoneNumber;
+                    existingUser.FullName = model.FullName;
+                    existingUser.Role = model.Role;
+                    existingUser.Gender = model.Gender;
+                    existingUser.IsActive = model.IsActive;
+                    existingUser.UserName = model.UserName;
+                    existingUser.Email = model.Email;
+                    existingUser.PhoneNumber = model.PhoneNumber;
                     existingUser.UpdatedAt = DateTime.UtcNow;
+
+                    if (model.Role == Role.Teacher)
+                    {
+                        if (existingUser.Student != null)
+                        {
+                            _context.Students.Remove(existingUser.Student);
+                        }
+
+                        if (existingUser.Teacher == null)
+                        {
+                            existingUser.Teacher = new Teacher
+                            {
+                                Id = Guid.NewGuid(),
+                                UserId = existingUser.Id
+                            };
+                            _context.Teachers.Add(existingUser.Teacher);
+                        }
+
+                        existingUser.Teacher.Gender = model.Gender;
+                        existingUser.Teacher.Specialization = model.Specialization;
+                        existingUser.Teacher.HireDate = model.HireDate;
+                        existingUser.Teacher.Salary = model.Salary;
+                        existingUser.Teacher.IsActive = model.IsActive;
+                    }
+                    else if (model.Role == Role.Student)
+                    {
+                        if (existingUser.Teacher != null)
+                        {
+                            _context.Teachers.Remove(existingUser.Teacher);
+                        }
+
+                        if (existingUser.Student == null)
+                        {
+                            existingUser.Student = new Student
+                            {
+                                Id = Guid.NewGuid(),
+                                UserId = existingUser.Id
+                            };
+                            _context.Students.Add(existingUser.Student);
+                        }
+
+                        existingUser.Student.Gender = model.Gender;
+                        existingUser.Student.DateOfBirth = model.DateOfBirth;
+                        existingUser.Student.CinNumber = model.CinNumber;
+                        existingUser.Student.PhoneNumber = model.PhoneNumber;
+                        existingUser.Student.SecondPhoneNumber = model.SecondPhoneNumber;
+                        existingUser.Student.Address = model.Address;
+                        existingUser.Student.IsActive = model.IsActive;
+                        existingUser.Student.EnrollmentDate = model.EnrollmentDate ?? existingUser.Student.EnrollmentDate;
+                        if (existingUser.Student.EnrollmentDate == default)
+                        {
+                            existingUser.Student.EnrollmentDate = DateTime.UtcNow;
+                        }
+                    }
+                    else
+                    {
+                        if (existingUser.Teacher != null)
+                        {
+                            _context.Teachers.Remove(existingUser.Teacher);
+                        }
+
+                        if (existingUser.Student != null)
+                        {
+                            _context.Students.Remove(existingUser.Student);
+                        }
+                    }
 
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserExists(user.Id))
+                    if (!UserExists(model.Id))
                     {
                         return NotFound();
                     }
@@ -188,7 +339,7 @@ namespace school.Controllers
             }
 
             PopulateSelectLists();
-            return View(user);
+            return View(model);
         }
 
         // GET: Users/Delete/5

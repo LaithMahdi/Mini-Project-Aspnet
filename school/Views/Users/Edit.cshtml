@@ -1,74 +1,170 @@
-﻿@model school.Models.User
+﻿@model school.ViewModels.UserEditViewModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Update User";
 }
 
-<h1>Edit</h1>
+<section class="user-form-page">
+    <div class="user-form-header">
+        <div>
+            <h1>Update User</h1>
+            <p class="user-form-subtitle">Modify role, account details, and activation status.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-light">Back to Users</a>
+    </div>
 
-<h4>User</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="user-form-shell">
+        <form asp-action="Edit" class="user-form-grid">
+            <div asp-validation-summary="ModelOnly" class="user-validation"></div>
             <input type="hidden" asp-for="Id" />
 
-            <div class="form-group">
-                <label asp-for="FullName" class="control-label"></label>
-                <input asp-for="FullName" class="form-control" />
-                <span asp-validation-for="FullName" class="text-danger"></span>
+            <div class="user-form-section">
+                <h3>Profile Information</h3>
+                <div class="user-form-fields two-cols">
+                    <div class="form-group">
+                        <label asp-for="FullName" class="control-label"></label>
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Role" class="control-label"></label>
+                        <select asp-for="Role" class="form-control" asp-items="ViewBag.Roles"></select>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Gender" class="control-label"></label>
+                        <select asp-for="Gender" class="form-control" asp-items="ViewBag.Genders">
+                            <option value="">-- Select Gender --</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group user-check-wrap">
+                        <label class="form-check user-check-control">
+                            <input class="form-check-input" asp-for="IsActive" />
+                            <span>@Html.DisplayNameFor(model => model.IsActive)</span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Role" class="control-label"></label>
-                <select asp-for="Role" class="form-control" asp-items="ViewBag.Roles"></select>
-                <span asp-validation-for="Role" class="text-danger"></span>
+            <div class="user-form-section">
+                <h3>Account Information</h3>
+                <div class="user-form-fields two-cols">
+                    <div class="form-group">
+                        <label asp-for="UserName" class="control-label"></label>
+                        <input asp-for="UserName" class="form-control" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Email" class="control-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group full-col">
+                        <label asp-for="PhoneNumber" class="control-label"></label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Gender" class="control-label"></label>
-                <select asp-for="Gender" class="form-control" asp-items="ViewBag.Genders">
-                    <option value="">-- Select Gender --</option>
-                </select>
-                <span asp-validation-for="Gender" class="text-danger"></span>
+            <div id="teacherFields" class="user-form-section user-form-section-teacher u-hidden">
+                <h3>Teacher Information</h3>
+                <div class="user-form-fields two-cols">
+                    <div class="form-group">
+                        <label asp-for="Specialization" class="control-label">Specialization</label>
+                        <input asp-for="Specialization" class="form-control" placeholder="e.g., Mathematics, Physics" />
+                        <span asp-validation-for="Specialization" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="HireDate" class="control-label">Hire Date</label>
+                        <input asp-for="HireDate" type="date" class="form-control" />
+                        <span asp-validation-for="HireDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group full-col">
+                        <label asp-for="Salary" class="control-label">Salary</label>
+                        <input asp-for="Salary" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                        <span asp-validation-for="Salary" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
-                </label>
+            <div id="studentFields" class="user-form-section user-form-section-student u-hidden">
+                <h3>Student Information</h3>
+                <div class="user-form-fields two-cols">
+                    <div class="form-group">
+                        <label asp-for="DateOfBirth" class="control-label">Date of Birth</label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CinNumber" class="control-label">ID Number</label>
+                        <input asp-for="CinNumber" class="form-control" placeholder="e.g., AB123456" />
+                        <span asp-validation-for="CinNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="SecondPhoneNumber" class="control-label">Secondary Phone</label>
+                        <input asp-for="SecondPhoneNumber" type="tel" class="form-control" placeholder="Parent/Guardian phone" />
+                        <span asp-validation-for="SecondPhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EnrollmentDate" class="control-label">Enrollment Date</label>
+                        <input asp-for="EnrollmentDate" type="date" class="form-control" />
+                        <span asp-validation-for="EnrollmentDate" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group full-col">
+                        <label asp-for="Address" class="control-label">Address</label>
+                        <input asp-for="Address" class="form-control" placeholder="Street address, city, zip code" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="UserName" class="control-label"></label>
-                <input asp-for="UserName" class="form-control" />
-                <span asp-validation-for="UserName" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="PhoneNumber" class="control-label"></label>
-                <input asp-for="PhoneNumber" class="form-control" />
-                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mt-3">
-                <input type="submit" value="Save" class="btn btn-primary" />
+            <div class="user-form-actions">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a asp-action="Index" class="btn btn-outline-light">Cancel</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+</section>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        (function () {
+            const roleSelect = document.getElementById('Role');
+            const teacherFields = document.getElementById('teacherFields');
+            const studentFields = document.getElementById('studentFields');
+
+            function toggleRoleSections() {
+                const selectedText = roleSelect.options[roleSelect.selectedIndex]?.text;
+
+                if (selectedText === 'Teacher') {
+                    teacherFields.classList.remove('u-hidden');
+                    studentFields.classList.add('u-hidden');
+                } else if (selectedText === 'Student') {
+                    teacherFields.classList.add('u-hidden');
+                    studentFields.classList.remove('u-hidden');
+                } else {
+                    teacherFields.classList.add('u-hidden');
+                    studentFields.classList.add('u-hidden');
+                }
+            }
+
+            roleSelect.addEventListener('change', toggleRoleSections);
+            toggleRoleSections();
+        })();
+    </script>
 }
