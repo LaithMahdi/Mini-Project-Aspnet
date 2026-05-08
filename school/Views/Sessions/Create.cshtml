@@ -25,7 +25,7 @@
             <div class="session-form-fields">
                 <div class="form-group">
                     <label asp-for="SessionDate" class="control-label"></label>
-                    <input asp-for="SessionDate" type="date" class="form-control" />
+                    <input asp-for="SessionDate" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="SessionDate" class="text-danger"></span>
                 </div>
 

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using school.Models.Validation;
 
 namespace school.Models
 {
@@ -6,10 +7,13 @@ namespace school.Models
     {
         public Guid Id { get; set; } = Guid.NewGuid();
 
+        [Required(ErrorMessage = "Date of Birth is required.")]
         [Display(Name = "Date of Birth")]
         [DataType(DataType.Date)]
+        [NoFutureDate(ErrorMessage = "Date of Birth cannot be in the future.")]
         public DateTime? DateOfBirth { get; set; }
 
+        [Display(Name = "Gender")]
         public Gender? Gender { get; set; }
 
         [Display(Name = "CIN Number")]
@@ -17,17 +21,18 @@ namespace school.Models
         public string? CinNumber { get; set; }
 
         [Display(Name = "Phone Number")]
-        [Phone]
+        [Phone(ErrorMessage = "Please enter a valid phone number.")]
         public string? PhoneNumber { get; set; }
 
         [Display(Name = "Secondary Phone")]
-        [Phone]
+        [Phone(ErrorMessage = "Please enter a valid phone number.")]
         public string? SecondPhoneNumber { get; set; }
 
-        [StringLength(255)]
+        [StringLength(255, ErrorMessage = "Address cannot exceed 255 characters.")]
+        [Display(Name = "Address")]
         public string? Address { get; set; }
 
-        [Display(Name = "Is Active")]
+        [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
 
         [Display(Name = "Enrollment Date")]

@@ -22,7 +22,7 @@
                 <div class="user-form-fields two-cols">
                     <div class="form-group">
                         <label asp-for="FullName" class="control-label">Full Name</label>
-                        <input asp-for="FullName" class="form-control" placeholder="Enter full name" />
+                        <input asp-for="FullName" class="form-control" placeholder="Enter full name" pattern="[a-zA-Zàâäæçéèêëìîïñòôöœùûüœ\s\-']+" title="Full Name can only contain letters, spaces, hyphens, and apostrophes." />
                         <span asp-validation-for="FullName" class="text-danger"></span>
                     </div>
 
@@ -89,7 +89,7 @@
 
                     <div class="form-group">
                         <label asp-for="HireDate" class="control-label">Hire Date</label>
-                        <input asp-for="HireDate" type="date" class="form-control" />
+                        <input asp-for="HireDate" type="date" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="HireDate" class="text-danger"></span>
                     </div>
 
@@ -106,7 +106,7 @@
                 <div class="user-form-fields two-cols">
                     <div class="form-group">
                         <label asp-for="DateOfBirth" class="control-label">Date of Birth</label>
-                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        <input asp-for="DateOfBirth" type="date" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
                         <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                     </div>
 
