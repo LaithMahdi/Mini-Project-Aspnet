@@ -30,21 +30,21 @@
                 </div>
 
                 <div class="form-group">
+                    <label class="control-label">Time Slot</label>
+                    <select id="SessionSlot" class="form-control" required>
+                        <option value="">-- Select Time Slot --</option>
+                        @foreach (var slot in ViewBag.SessionSlots)
+                        {
+                            <option value="@slot.Value">@slot.Text</option>
+                        }
+                    </select>
+                    <small class="form-text text-muted">Each session is 90 minutes. Breaks: 10:00-10:10, 11:40-12:10, 13:40-13:50</small>
+                </div>
+
+                <div class="form-group">
                     <label asp-for="Status" class="control-label"></label>
                     <select asp-for="Status" class="form-control" asp-items="statusOptions"></select>
                     <span asp-validation-for="Status" class="text-danger"></span>
-                </div>
-
-                <div class="form-group">
-                    <label asp-for="StartTime" class="control-label"></label>
-                    <input asp-for="StartTime" type="time" class="form-control" />
-                    <span asp-validation-for="StartTime" class="text-danger"></span>
-                </div>
-
-                <div class="form-group">
-                    <label asp-for="EndTime" class="control-label"></label>
-                    <input asp-for="EndTime" type="time" class="form-control" />
-                    <span asp-validation-for="EndTime" class="text-danger"></span>
                 </div>
 
                 <div class="form-group full-col">
@@ -83,4 +83,36 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        (function () {
+            const form = document.querySelector('form[asp-action="Create"]');
+            const slotSelect = document.getElementById('SessionSlot');
+            const startTimeInput = form?.querySelector('[asp-for="StartTime"]');
+            const endTimeInput = form?.querySelector('[asp-for="EndTime"]');
+
+            if (slotSelect && startTimeInput && endTimeInput) {
+                // When slot is selected, populate start/end times
+                slotSelect.addEventListener('change', function () {
+                    if (this.value) {
+                        const [startTime, endTime] = this.value.split('-');
+                        startTimeInput.value = startTime;
+                        endTimeInput.value = endTime;
+
+                        // Update HTML5 time input format (needed for proper validation)
+                        startTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        endTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+
+                // Validate on form submit
+                form.addEventListener('submit', function (e) {
+                    if (!slotSelect.value) {
+                        e.preventDefault();
+                        alert('Please select a time slot');
+                        slotSelect.focus();
+                    }
+                });
+            }
+        })();
+    </script>
 }

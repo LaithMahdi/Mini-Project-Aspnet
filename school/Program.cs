@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using school.Models;
 using school.Seeding;
+using school.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,9 @@ builder.Services.AddAuthorizationBuilder()
         .Build());
 
 builder.Services.AddControllersWithViews();
+
+// Register session schedule service
+builder.Services.AddScoped<ISessionScheduleService, SessionScheduleService>();
 
 var app = builder.Build();
 

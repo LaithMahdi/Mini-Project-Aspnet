@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using school.Models;
+using school.Services;
 
 namespace school.Controllers
 {
     public class SessionsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ISessionScheduleService _scheduleService;
 
-        public SessionsController(ApplicationDbContext context)
+        public SessionsController(ApplicationDbContext context, ISessionScheduleService scheduleService)
         {
             _context = context;
+            _scheduleService = scheduleService;
         }
 
         // GET: Sessions
@@ -194,10 +197,46 @@ namespace school.Controllers
                 return Forbid();
             }
 
-                Console.WriteLine($"Creating session: Date={session.SessionDate}, StartTime={session.StartTime}, EndTime={session.EndTime}, Status={session.Status}, IsActive={session.IsActive}, RoomId={session.RoomId}, SubjectId={session.SubjectId}, TeacherId={session.TeacherId}");
+            // Validate end time is after start time
+            if (session.EndTime <= session.StartTime)
+            {
+                ModelState.AddModelError("EndTime", "End Time must be after Start Time.");
+            }
+
+            // Validate room availability - check for conflicts
+            if (session.RoomId > 0)
+            {
+                var roomConflict = await _context.Sessions
+                    .Where(s => s.RoomId == session.RoomId
+                        && s.SessionDate == session.SessionDate
+                        && s.Status != SessionStatus.CANCELLED
+                        && ((s.StartTime < session.EndTime && s.EndTime > session.StartTime)))
+                    .FirstOrDefaultAsync();
+
+                if (roomConflict != null)
+                {
+                    ModelState.AddModelError("RoomId", $"Room is not available. It's already scheduled from {roomConflict.StartTime:hh\\:mm} to {roomConflict.EndTime:hh\\:mm} on this date.");
+                }
+            }
+
+            // Validate teacher availability - check for conflicts
+            if (session.TeacherId != Guid.Empty)
+            {
+                var teacherConflict = await _context.Sessions
+                    .Where(s => s.TeacherId == session.TeacherId
+                        && s.SessionDate == session.SessionDate
+                        && s.Status != SessionStatus.CANCELLED
+                        && ((s.StartTime < session.EndTime && s.EndTime > session.StartTime)))
+                    .FirstOrDefaultAsync();
+
+                if (teacherConflict != null)
+                {
+                    ModelState.AddModelError("TeacherId", $"Teacher is not available. They have another session from {teacherConflict.StartTime:hh\\:mm} to {teacherConflict.EndTime:hh\\:mm} on this date.");
+                }
+            }
+
             if (ModelState.IsValid)
             {
-                                // print the session details to the console for debugging
                 _context.Add(session);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -243,6 +282,46 @@ namespace school.Controllers
             if (id != session.Id)
             {
                 return NotFound();
+            }
+
+            // Validate end time is after start time
+            if (session.EndTime <= session.StartTime)
+            {
+                ModelState.AddModelError("EndTime", "End Time must be after Start Time.");
+            }
+
+            // Validate room availability - check for conflicts (excluding current session)
+            if (session.RoomId > 0)
+            {
+                var roomConflict = await _context.Sessions
+                    .Where(s => s.Id != session.Id  // Exclude current session
+                        && s.RoomId == session.RoomId
+                        && s.SessionDate == session.SessionDate
+                        && s.Status != SessionStatus.CANCELLED
+                        && ((s.StartTime < session.EndTime && s.EndTime > session.StartTime)))
+                    .FirstOrDefaultAsync();
+
+                if (roomConflict != null)
+                {
+                    ModelState.AddModelError("RoomId", $"Room is not available. It's already scheduled from {roomConflict.StartTime:hh\\:mm} to {roomConflict.EndTime:hh\\:mm} on this date.");
+                }
+            }
+
+            // Validate teacher availability - check for conflicts (excluding current session)
+            if (session.TeacherId != Guid.Empty)
+            {
+                var teacherConflict = await _context.Sessions
+                    .Where(s => s.Id != session.Id  // Exclude current session
+                        && s.TeacherId == session.TeacherId
+                        && s.SessionDate == session.SessionDate
+                        && s.Status != SessionStatus.CANCELLED
+                        && ((s.StartTime < session.EndTime && s.EndTime > session.StartTime)))
+                    .FirstOrDefaultAsync();
+
+                if (teacherConflict != null)
+                {
+                    ModelState.AddModelError("TeacherId", $"Teacher is not available. They have another session from {teacherConflict.StartTime:hh\\:mm} to {teacherConflict.EndTime:hh\\:mm} on this date.");
+                }
             }
 
             if (ModelState.IsValid)
@@ -445,9 +524,18 @@ namespace school.Controllers
                 })
                 .ToList();
 
+            // Get available session slots
+            var sessionSlots = _scheduleService.GetAvailableSlots();
+            var slotOptions = sessionSlots.Select(slot => new
+            {
+                Value = $"{slot.StartTime:hh\\:mm}-{slot.EndTime:hh\\:mm}",
+                Display = slot.DisplayName
+            }).ToList();
+
             ViewBag.RoomOptions = new SelectList(roomOptions, "Id", "Display", roomId);
             ViewBag.SubjectOptions = new SelectList(subjectOptions, "Id", "Display", subjectId);
             ViewBag.TeacherOptions = new SelectList(teacherOptions, "Id", "Display", teacherId);
+            ViewBag.SessionSlots = new SelectList(slotOptions, "Value", "Display");
         }
 
         private async Task<Guid?> GetCurrentTeacherIdAsync()
