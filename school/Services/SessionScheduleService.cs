@@ -75,7 +75,7 @@ namespace school.Services
         public string GetSlotDisplayName(TimeOnly startTime, TimeOnly endTime)
         {
             var slot = FixedSlots.FirstOrDefault(s => s.StartTime == startTime && s.EndTime == endTime);
-            return slot?.DisplayName ?? $"{startTime:hh\\:mm} - {endTime:hh\\:mm}";
+            return slot?.DisplayName ?? $"{startTime:HH\\:mm} - {endTime:HH\\:mm}";
         }
     }
 }
