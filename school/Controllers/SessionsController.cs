@@ -29,8 +29,7 @@ namespace school.Controllers
             SessionStatus? status,
             Guid? teacherId,
             int? subjectId,
-            string? startTime,
-            string? endTime,
+            string? timeSlot,
             int page = 1)
         {
             const int pageSize = 15;
@@ -84,14 +83,13 @@ namespace school.Controllers
                 sessionsQuery = sessionsQuery.Where(s => s.SubjectId == subjectId.Value);
             }
 
-            if (!string.IsNullOrWhiteSpace(startTime) && TimeOnly.TryParse(startTime, out var parsedStartTime))
+            if (!string.IsNullOrWhiteSpace(timeSlot))
             {
-                sessionsQuery = sessionsQuery.Where(s => s.StartTime >= parsedStartTime);
-            }
-
-            if (!string.IsNullOrWhiteSpace(endTime) && TimeOnly.TryParse(endTime, out var parsedEndTime))
-            {
-                sessionsQuery = sessionsQuery.Where(s => s.EndTime <= parsedEndTime);
+                var times = timeSlot.Split('-');
+                if (times.Length == 2 && TimeOnly.TryParse(times[0], out var parsedStartTime) && TimeOnly.TryParse(times[1], out var parsedEndTime))
+                {
+                    sessionsQuery = sessionsQuery.Where(s => s.StartTime == parsedStartTime && s.EndTime == parsedEndTime);
+                }
             }
 
             var filteredTotal = await sessionsQuery.CountAsync();
@@ -120,15 +118,14 @@ namespace school.Controllers
             ViewBag.Status = status;
             ViewBag.TeacherId = teacherId;
             ViewBag.SubjectId = subjectId;
-            ViewBag.StartTime = startTime;
-            ViewBag.EndTime = endTime;
+            ViewBag.TimeSlot = timeSlot;
             ViewBag.CurrentPage = page;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalPages = totalPages;
             ViewBag.FilteredTotal = filteredTotal;
             ViewBag.IsTeacher = isTeacher;
 
-            PopulateFilterOptions(status, teacherId, subjectId);
+            PopulateFilterOptions(status, teacherId, subjectId, timeSlot);
 
             return View(sessions);
         }
@@ -456,7 +453,7 @@ namespace school.Controllers
             return _context.Sessions.Any(e => e.Id == id);
         }
 
-        private void PopulateFilterOptions(SessionStatus? selectedStatus, Guid? selectedTeacherId, int? selectedSubjectId)
+        private void PopulateFilterOptions(SessionStatus? selectedStatus, Guid? selectedTeacherId, int? selectedSubjectId, string? selectedTimeSlot = null)
         {
             var statusOptions = Enum.GetValues<SessionStatus>()
                 .Select(s => new
@@ -490,6 +487,16 @@ namespace school.Controllers
 
             ViewBag.TeacherOptions = new SelectList(teacherOptions, "Id", "Display", selectedTeacherId);
             ViewBag.SubjectOptions = new SelectList(subjectOptions, "Id", "Display", selectedSubjectId);
+
+            // Get available session slots for filter
+            var sessionSlots = _scheduleService.GetAvailableSlots();
+            var slotOptions = sessionSlots.Select(slot => new
+            {
+                Value = $"{slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm}",
+                Text = slot.DisplayName
+            }).ToList();
+
+            ViewBag.SessionSlots = new SelectList(slotOptions, "Value", "Text", selectedTimeSlot);
         }
 
         private void PopulateEditOptions(SessionStatus? selectedStatus = null, int? roomId = null, int? subjectId = null, Guid? teacherId = null)

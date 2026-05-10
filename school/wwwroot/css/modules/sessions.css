@@ -580,3 +580,8 @@
   flex-wrap: wrap;
 }
 
+.btn.btn-primary,
+.btn.btn-primary:hover,
+.btn.btn-primary:focus {
+  color: #ffffff;
+}
