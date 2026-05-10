@@ -15,11 +15,13 @@ namespace school.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ISessionScheduleService _scheduleService;
+        private readonly INotificationService _notificationService;
 
-        public SessionsController(ApplicationDbContext context, ISessionScheduleService scheduleService)
+        public SessionsController(ApplicationDbContext context, ISessionScheduleService scheduleService, INotificationService notificationService)
         {
             _context = context;
             _scheduleService = scheduleService;
+            _notificationService = notificationService;
         }
 
         // GET: Sessions
@@ -439,6 +441,24 @@ namespace school.Controllers
             session.Status = SessionStatus.CANCELLED;
             session.IsActive = false;
             await _context.SaveChangesAsync();
+
+            // Notification: Teacher cancelled session
+            if (User.IsInRole(Role.Teacher.ToString()))
+            {
+                var teacherUser = await _context.Users.FindAsync(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
+                var subject = await _context.Subjects.FindAsync(session.SubjectId);
+                
+                var admins = await _context.Users.Where(u => u.Role == Role.Admin).ToListAsync();
+                foreach (var admin in admins)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        admin.Id,
+                        "Session Cancelled by Teacher",
+                        $"Teacher {teacherUser?.FullName} has cancelled the {subject?.Name} session scheduled for {session.SessionDate:dd/MM/yyyy} at {session.StartTime:HH\\:mm}.",
+                        $"/Sessions/Details/{session.Id}"
+                    );
+                }
+            }
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {

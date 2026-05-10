@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace school.Models
 {
@@ -19,6 +19,7 @@ namespace school.Models
         public DbSet<Session> Sessions { get; set; }
         public DbSet<ClassSubject> ClassSubjects { get; set; }
         public DbSet<SessionAuditLog> SessionAuditLogs { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         public override int SaveChanges()
         {

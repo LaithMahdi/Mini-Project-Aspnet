@@ -1,0 +1,136 @@
+@model IEnumerable<school.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="notifications-page">
+    <div class="notifications-header">
+        <h1>Notifications</h1>
+        @if (Model.Any(n => !n.IsRead))
+        {
+            <form asp-action="MarkAllAsRead" method="post">
+                <button type="submit" class="btn btn-outline-primary btn-sm">Mark all as read</button>
+            </form>
+        }
+    </div>
+
+    <div class="notifications-list">
+        @if (!Model.Any())
+        {
+            <div class="notifications-empty">
+                <i class="fa-solid fa-bell-slash"></i>
+                <p>No notifications yet.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <div class="notification-item @(item.IsRead ? "read" : "unread")" data-id="@item.Id">
+                    <div class="notification-icon">
+                        <i class="fa-solid fa-circle-info text-blue-500"></i>
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-title">@item.Title</div>
+                        <div class="notification-message">@item.Message</div>
+                        <div class="notification-time">@item.CreatedAt.ToLocalTime().ToString("g")</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(item.Link))
+                    {
+                        <a href="@item.Link" class="notification-link-overlay"></a>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.notification-item.unread').on('click', function() {
+                var id = $(this).data('id');
+                var $item = $(this);
+                $.post('/Notifications/MarkAsRead/' + id, function() {
+                    $item.removeClass('unread').addClass('read');
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+    .notifications-page {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .notifications-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .notifications-list {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    .notification-item {
+        position: relative;
+        display: flex;
+        gap: 1rem;
+        padding: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.2s;
+    }
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+    .notification-item.unread {
+        background: #f8faff;
+        border-left: 4px solid #3b82f6;
+    }
+    .notification-item:hover {
+        background: #f1f5f9;
+    }
+    .notification-icon {
+        flex-shrink: 0;
+        font-size: 1.25rem;
+    }
+    .notification-content {
+        flex: 1;
+    }
+    .notification-title {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+    .notification-message {
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    .notification-time {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-top: 0.5rem;
+    }
+    .notification-link-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .notifications-empty {
+        padding: 4rem 2rem;
+        text-align: center;
+        color: #94a3b8;
+    }
+    .notifications-empty i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>

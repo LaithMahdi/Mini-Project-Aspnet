@@ -1,4 +1,4 @@
-﻿@{
+@{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
     var currentControllerLower = currentController.ToLowerInvariant();
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
@@ -60,6 +60,11 @@
              @if (!isAdmin){
                 <a class="@navClass("Students")" asp-controller="Students" asp-action="Index"><i class="fa-solid fa-user-graduate"></i><span>Students</span></a>
              }
+                <a class="@navClass("Notifications")" asp-controller="Notifications" asp-action="Index">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Notifications</span>
+                    @await Component.InvokeAsync("NotificationCount")
+                </a>
                 <a class="@navClass("Sessions")" asp-controller="Sessions" asp-action="Index"><i class="fa-solid fa-calendar-days"></i><span>Sessions</span></a>
                 @if (isAdmin)
                 {

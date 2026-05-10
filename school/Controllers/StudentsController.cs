@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using school.Models;
+using school.Services;
 
 namespace school.Controllers
 {
     public class StudentsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public StudentsController(ApplicationDbContext context)
+        public StudentsController(ApplicationDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         // GET: Students
@@ -190,6 +193,27 @@ namespace school.Controllers
                 student.Id = Guid.NewGuid();
                 _context.Add(student);
                 await _context.SaveChangesAsync();
+
+                // Notification: Student added to class
+                if (student.ClassId != null)
+                {
+                    var classe = await _context.Classes.FindAsync(student.ClassId);
+                    if (classe != null && classe.ReferentTeacherId.HasValue)
+                    {
+                        var studentUser = await _context.Users.FindAsync(student.UserId);
+                        var teacher = await _context.Teachers.Include(t => t.User).FirstOrDefaultAsync(t => t.Id == classe.ReferentTeacherId.Value);
+                        if (teacher != null)
+                        {
+                            await _notificationService.SendNotificationAsync(
+                                teacher.UserId,
+                                "New Student in Class",
+                                $"Student {studentUser?.FullName} has been added to your class {classe.Name}.",
+                                $"/Students/Details/{student.Id}"
+                            );
+                        }
+                    }
+                }
+
                 return RedirectToAction(nameof(Index));
             }
             ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName", student.UserId);
@@ -241,8 +265,54 @@ namespace school.Controllers
             {
                 try
                 {
+                    var oldStudent = await _context.Students.AsNoTracking().FirstOrDefaultAsync(s => s.Id == student.Id);
+                    var oldClassId = oldStudent?.ClassId;
+
                     _context.Update(student);
                     await _context.SaveChangesAsync();
+
+                    // Notification: Class changed
+                    if (student.ClassId != oldClassId)
+                    {
+                        var studentUser = await _context.Users.FindAsync(student.UserId);
+
+                        // Notify old teacher if removed
+                        if (oldClassId.HasValue)
+                        {
+                            var oldClasse = await _context.Classes.FindAsync(oldClassId.Value);
+                            if (oldClasse != null && oldClasse.ReferentTeacherId.HasValue)
+                            {
+                                var oldTeacher = await _context.Teachers.Include(t => t.User).FirstOrDefaultAsync(t => t.Id == oldClasse.ReferentTeacherId.Value);
+                                if (oldTeacher != null)
+                                {
+                                    await _notificationService.SendNotificationAsync(
+                                        oldTeacher.UserId,
+                                        "Student Removed from Class",
+                                        $"Student {studentUser?.FullName} has been removed from your class {oldClasse.Name}."
+                                    );
+                                }
+                            }
+                        }
+
+                        // Notify new teacher if added
+                        if (student.ClassId.HasValue)
+                        {
+                            var newClasse = await _context.Classes.FindAsync(student.ClassId.Value);
+                            if (newClasse != null && newClasse.ReferentTeacherId.HasValue)
+                            {
+                                var newTeacher = await _context.Teachers.Include(t => t.User).FirstOrDefaultAsync(t => t.Id == newClasse.ReferentTeacherId.Value);
+                                if (newTeacher != null)
+                                {
+                                    await _notificationService.SendNotificationAsync(
+                                        newTeacher.UserId,
+                                        "New Student in Class",
+                                        $"Student {studentUser?.FullName} has been added to your class {newClasse.Name}.",
+                                        $"/Students/Details/{student.Id}"
+                                    );
+                                }
+                            }
+                        }
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {

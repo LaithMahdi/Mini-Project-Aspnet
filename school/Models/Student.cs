@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using school.Models.Validation;
 
 namespace school.Models
@@ -18,14 +18,17 @@ namespace school.Models
 
         [Display(Name = "CIN Number")]
         [StringLength(20, ErrorMessage = "CIN Number cannot exceed 20 characters.")]
+        [RegularExpression(@"^[A-Z0-9]{8,20}$", ErrorMessage = "CIN must be 8-20 alphanumeric characters.")]
         public string? CinNumber { get; set; }
 
         [Display(Name = "Phone Number")]
         [Phone(ErrorMessage = "Please enter a valid phone number.")]
+        [RegularExpression(@"^\+?[0-9]{8,15}$", ErrorMessage = "Phone number must be between 8 and 15 digits.")]
         public string? PhoneNumber { get; set; }
 
         [Display(Name = "Secondary Phone")]
         [Phone(ErrorMessage = "Please enter a valid phone number.")]
+        [RegularExpression(@"^\+?[0-9]{8,15}$", ErrorMessage = "Phone number must be between 8 and 15 digits.")]
         public string? SecondPhoneNumber { get; set; }
 
         [StringLength(255, ErrorMessage = "Address cannot exceed 255 characters.")]

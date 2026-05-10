@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,16 +7,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using school.Models;
+using school.Services;
 
 namespace school.Controllers
 {
     public class ClassesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public ClassesController(ApplicationDbContext context)
+        public ClassesController(ApplicationDbContext context, INotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         // GET: Classes
@@ -242,7 +245,10 @@ namespace school.Controllers
             {
                 try
                 {
-                    var existingClasse = await _context.Classes.FindAsync(id);
+                    var oldClasse = await _context.Classes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+                    var oldReferentTeacherId = oldClasse?.ReferentTeacherId;
+
+                    var existingClasse = await _context.Classes.FirstOrDefaultAsync(c => c.Id == id);
                     if (existingClasse == null)
                     {
                         return NotFound();
@@ -258,6 +264,21 @@ namespace school.Controllers
                     existingClasse.ReferentTeacherId = classe.ReferentTeacherId;
 
                     await _context.SaveChangesAsync();
+
+                    // Notification: Referent Teacher assigned
+                    if (classe.ReferentTeacherId != oldReferentTeacherId && classe.ReferentTeacherId.HasValue)
+                    {
+                        var teacher = await _context.Teachers.Include(t => t.User).FirstOrDefaultAsync(t => t.Id == classe.ReferentTeacherId.Value);
+                        if (teacher != null)
+                        {
+                            await _notificationService.SendNotificationAsync(
+                                teacher.UserId,
+                                "Referent Teacher Assignment",
+                                $"You have been assigned as the referent teacher for class {classe.Name}.",
+                                $"/Classes/Details/{classe.Id}"
+                            );
+                        }
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -374,6 +395,24 @@ namespace school.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // Notification: Teacher assigned to subject
+            if (teacherId.HasValue)
+            {
+                var teacher = await _context.Teachers.Include(t => t.User).FirstOrDefaultAsync(t => t.Id == teacherId.Value);
+                var subject = await _context.Subjects.FindAsync(subjectId);
+                var classe = await _context.Classes.FindAsync(id);
+                if (teacher != null && subject != null && classe != null)
+                {
+                    await _notificationService.SendNotificationAsync(
+                        teacher.UserId,
+                        "Subject Assignment",
+                        $"You have been assigned to teach {subject.Name} in class {classe.Name}.",
+                        $"/Classes/Details/{id}"
+                    );
+                }
+            }
+
             return RedirectToAction(nameof(Edit), new { id });
         }
 

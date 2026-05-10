@@ -26,8 +26,9 @@ builder.Services.AddAuthorizationBuilder()
 
 builder.Services.AddControllersWithViews();
 
-// Register session schedule service
+// Register services
 builder.Services.AddScoped<ISessionScheduleService, SessionScheduleService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 var app = builder.Build();
 

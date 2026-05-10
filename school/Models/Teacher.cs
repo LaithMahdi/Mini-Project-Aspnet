@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using static System.Collections.Specialized.BitVector32;
 using school.Models.Validation;
@@ -18,7 +18,7 @@ namespace school.Models
 
         [Display(Name = "Hire Date")]
         [DataType(DataType.Date)]
-        [NoPastDate(ErrorMessage = "Hire Date cannot be in the future.")]
+        [NoFutureDate(ErrorMessage = "Hire Date cannot be in the future.")]
         public DateTime? HireDate { get; set; }
 
         [Range(0, 100000, ErrorMessage = "Salary must be a positive number.")]

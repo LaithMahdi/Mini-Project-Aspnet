@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using school.Models.Validation;
 
@@ -32,6 +32,7 @@ namespace school.Models
 
         [Required(ErrorMessage = "Academic Year is required.")]
         [StringLength(10, ErrorMessage = "Academic Year cannot exceed 10 characters.")]
+        [RegularExpression(@"^\d{4}/\d{4}$", ErrorMessage = "Academic Year must be in the format YYYY/YYYY (e.g., 2026/2027).")]
         [Display(Name = "Academic Year")]
         public string AcademicYear { get; set; } = string.Empty;
 
