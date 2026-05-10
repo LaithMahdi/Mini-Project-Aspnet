@@ -1,148 +1,104 @@
-# School Management System
+![Project Logo](assets/logo.svg)
 
-Système de gestion scolaire ASP.NET Core MVC premium permettant une gestion complète et automatisée des étudiants, enseignants, classes et sessions.
+# School Management System — Professional Edition
 
-## 🚀 Fonctionnalités Avancées
+An ASP.NET Core MVC application for managing students, teachers, classes, sessions and notifications with a focus on stability, usability, and productivity.
 
-- ✅ **Système de Notifications** : Alertes en temps réel pour les affectations, transferts et annulations de sessions.
-- ✅ **Gestion "Pro" des Classes** : Interface d'enrôlement avec recherche en temps réel, contrôle de capacité et gestion des transferts.
-- ✅ **Planning Intelligent** : Gestion des sessions avec créneaux horaires fixes et détection de conflits.
-- ✅ **Design Premium** : Interface moderne avec Glassmorphism, animations fluides et palettes de couleurs harmonieuses.
-- ✅ **Gestion Multi-Rôles** : Tableaux de bord et accès spécifiques pour Administrateurs, Enseignants et Étudiants.
-- ✅ **Validation Avancée** : Contrôles de données stricts côté serveur et client (dates, formats, capacités).
+## Key Features
 
-## 📋 Prérequis
+- Notifications: real-time alerts and an admin notification center.
+- Advanced Class Enrollment: capacity checks, transfers, and live search.
+- Session Scheduling: conflict detection and fixed time slots.
+- Role-based dashboards for Admins, Teachers and Students.
+- Robust validation on client and server sides.
 
-- .NET 10 SDK ou supérieur
-- Visual Studio 2022 ou VS Code
-- Git
-- SQL Server (LocalDB ou Express)
-- Node.js (pour la compilation Tailwind)
+## Requirements
 
-## 🔧 Installation
+- .NET 10 SDK or later
+- SQL Server (LocalDB, Express, or full instance)
+- Node.js (for Tailwind CSS build tasks)
+- Git (recommended)
 
-### 1. Cloner le dépôt
+## Quickstart
+
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/LaithMahdi/mini-project-aspnet.git
 cd mini-project-aspnet
 ```
 
-### 2. Configurer la base de données
-
-L'application utilise une base de données SQL Server locale. Les migrations sont déjà incluses.
+2. Restore dependencies and run database migrations:
 
 ```bash
+dotnet restore
 dotnet ef database update
 ```
 
-### 3. Lancer l'application
+3. Build and run the app:
 
 ```bash
+dotnet build
 dotnet run
 ```
 
-L'application sera accessible sur `https://localhost:5001`. Les données de test sont automatiquement générées via l' `AppSeeder`.
+4. (Optional) Build Tailwind CSS assets:
 
-## 📁 Structure du projet
+```bash
+npm install
+npm run tailwind:build
+```
+
+The site will be available at https://localhost:5001 by default.
+
+## Project Structure (high level)
 
 ```
 school/
-├── Controllers/
-│   ├── NotificationsController.cs  # Gestion des alertes
-│   ├── ClassesController.cs        # Gestion Pro des classes
-│   ├── SessionsController.cs       # Gestion du planning
-│   └── ...                         # Autres contrôleurs (Users, Students...)
-├── Services/
-│   ├── NotificationService.cs      # Logique d'envoi d'alertes
-│   └── SessionScheduleService.cs   # Logique des créneaux horaires
-├── Models/
-│   ├── Notification.cs             # Modèle d'alerte
-│   ├── Classe.cs                   # Modèle classe (avec capacité)
-│   └── ...                         # Entités de base
-├── ViewComponents/
-│   └── NotificationCount.cs        # Badge dynamique dans la navbar
-├── Views/
-│   ├── Notifications/              # Interface des alertes
-│   ├── Sessions/                   # Calendrier et planning
-│   └── ...                         # Vues modules
-├── wwwroot/
-│   ├── css/modules/                # Styles spécifiques par module
-│   └── js/                         # Scripts interactifs
-└── README.md                       # Ce fichier
+├── Controllers/        # MVC controllers
+├── Models/             # Entity models and enums
+├── Views/              # Razor views and partials
+├── Services/           # Business logic services
+├── Migrations/         # EF Core migrations
+├── wwwroot/            # Static assets
+└── README.md           # This file
 ```
 
-## 📝 Nouvelles Fonctionnalités "Pro"
+## Technologies
 
-### 🔔 Système de Notification
-- **Alertes Automatiques** : Les enseignants sont notifiés lors de l'affectation d'un nouvel étudiant.
-- **Gestion des Sessions** : Les administrateurs reçoivent une alerte immédiate si une session est annulée par un enseignant.
-- **Interface Interactive** : Badge de comptage dynamique et page de gestion avec filtres (Tout, Non lu, Lu).
+- ASP.NET Core 10
+- C# 14
+- Entity Framework Core
+- Razor Views & ViewComponents
+- Tailwind CSS (frontend styling)
 
-### 🎓 Enrôlement Avancé
-- **Recherche en temps réel** : Filtrage instantané des étudiants lors de l'affectation.
-- **Gestion des transferts** : Visualisation de la classe actuelle des étudiants et transfert automatique.
-- **Contrôle de Capacité** : Indicateur visuel `[Sélection] / [Capacité]` avec blocage automatique si la limite est dépassée.
+## Development Checklist
 
-## 🛠️ Technologies utilisées
+- [x] Notifications system
+- [x] Advanced enrollment with capacity checks
+- [x] Session scheduling and conflict detection
+- [x] Data seeding for demo/testing
+- [ ] PDF export for schedules (planned)
+- [ ] Internal messaging between teachers (planned)
 
-| Technologie           | Version | Utilisation              |
-| --------------------- | ------- | ------------------------ |
-| ASP.NET Core          | 10      | Framework web            |
-| C#                    | 14.0    | Langage principal        |
-| Entity Framework Core | 10.0.6  | ORM base de données      |
-| Razor View Components | -       | UI dynamique et réutilisable |
-| Tailwind CSS          | -       | Design premium           |
-| jQuery / AJAX         | -       | Interactions sans rechargement |
+## Author
 
-## 📋 Checklist de développement
-
-- [x] Système de Notifications temps réel
-- [x] Enrôlement Pro avec contrôle de capacité
-- [x] Planning par créneaux horaires
-- [x] Validation avancée (regex, dates passées/futures)
-- [x] Redesign complet de l'interface (Login, Sessions, Notifs)
-- [x] Seeding de données complexe
-- [ ] Exports PDF des emplois du temps
-- [ ] Messagerie interne entre enseignants
-
-## 👨‍💻 Auteur
-
-**Laith Mahdi**
-- GitHub : [@LaithMahdi](https://github.com/LaithMahdi)
+Laith Mahdi — https://github.com/LaithMahdi
 
 ---
 
-**Dernière mise à jour** : 2026  
-**Version** : 1.2.0  
-**Statut** : Stable - En expansion 🚀
+**License & Contact**
+
+This project is provided as-is for demonstration and educational purposes. For questions or commercial licensing, contact the author via the GitHub profile above.
+
+Footer: Built with care • © 2026 Laith Mahdi
 
 ```bash
-# Restaurer les dépendances
+# Common commands
 dotnet restore
-
-# Installer les dépendances front-end (Tailwind)
-npm install
-
-# Build le projet
 dotnet build
-
-# Lancer en debug
 dotnet run
-
-# Compiler Tailwind CSS
-npm run tailwind:build
-
-# Migrations EF Core
-dotnet ef migrations add NomMigration
 dotnet ef database update
-dotnet ef database drop
-
-# Migrations EF Core (NuGet Package Manager Console)
-PM> Drop-Database
-PM> Add-Migration UpdateFields
-PM> Update-Database
-
-# Tests
-dotnet test
+npm install
+npm run tailwind:build
 ```
