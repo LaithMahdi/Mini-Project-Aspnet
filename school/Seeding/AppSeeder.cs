@@ -295,7 +295,10 @@ namespace school.Seeding
 
                 var timeSlots = new[] 
                 { 
-                    (8, 10), (10, 12), (12, 14), (14, 16), (16, 18) 
+                    (new TimeOnly(8, 30), new TimeOnly(10, 0)), 
+                    (new TimeOnly(10, 10), new TimeOnly(11, 40)), 
+                    (new TimeOnly(12, 10), new TimeOnly(13, 40)), 
+                    (new TimeOnly(13, 50), new TimeOnly(15, 20)) 
                 };
 
                 foreach (var classSubject in classSubjects.Take(30))
@@ -313,8 +316,8 @@ namespace school.Seeding
                         var session = new Session
                         {
                             SessionDate = sessionDate,
-                            StartTime = new TimeOnly(timeSlot.Item1, 0),
-                            EndTime = new TimeOnly(timeSlot.Item2, 0),
+                            StartTime = timeSlot.Item1,
+                            EndTime = timeSlot.Item2,
                             Status = SessionStatus.PLANNED,
                             IsActive = true,
                             CreatedAt = now,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -192,6 +192,15 @@ namespace school.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("SessionDate,StartTime,EndTime,Status,IsActive,RoomId,SubjectId,TeacherId")] Session session)
         {
+            Console.WriteLine("\n--- INCOMING SESSION DATA ---");
+            Console.WriteLine($"SessionDate: {session.SessionDate:yyyy-MM-dd}");
+            Console.WriteLine($"StartTime: {session.StartTime:hh\\:mm\\:ss}");
+            Console.WriteLine($"EndTime: {session.EndTime:hh\\:mm\\:ss}");
+            Console.WriteLine($"Status: {session.Status}");
+            Console.WriteLine($"IsActive: {session.IsActive}");
+            Console.WriteLine($"RoomId: {session.RoomId}");
+            Console.WriteLine($"SubjectId: {session.SubjectId}");
+            Console.WriteLine($"TeacherId: {session.TeacherId}");
             if (User.IsInRole(Role.Teacher.ToString()))
             {
                 return Forbid();
@@ -210,12 +219,12 @@ namespace school.Controllers
                     .Where(s => s.RoomId == session.RoomId
                         && s.SessionDate == session.SessionDate
                         && s.Status != SessionStatus.CANCELLED
-                        && ((s.StartTime < session.EndTime && s.EndTime > session.StartTime)))
+                        && (s.StartTime < session.EndTime && s.EndTime > session.StartTime))
                     .FirstOrDefaultAsync();
 
                 if (roomConflict != null)
                 {
-                    ModelState.AddModelError("RoomId", $"Room is not available. It's already scheduled from {roomConflict.StartTime:hh\\:mm} to {roomConflict.EndTime:hh\\:mm} on this date.");
+                    ModelState.AddModelError("RoomId", $"Room is not available. It's already scheduled from {roomConflict.StartTime:HH\\:mm} to {roomConflict.EndTime:HH\\:mm} on this date.");
                 }
             }
 
@@ -231,7 +240,7 @@ namespace school.Controllers
 
                 if (teacherConflict != null)
                 {
-                    ModelState.AddModelError("TeacherId", $"Teacher is not available. They have another session from {teacherConflict.StartTime:hh\\:mm} to {teacherConflict.EndTime:hh\\:mm} on this date.");
+                    ModelState.AddModelError("TeacherId", $"Teacher is not available. They have another session from {teacherConflict.StartTime:HH\\:mm} to {teacherConflict.EndTime:HH\\:mm} on this date.");
                 }
             }
 
@@ -298,12 +307,12 @@ namespace school.Controllers
                         && s.RoomId == session.RoomId
                         && s.SessionDate == session.SessionDate
                         && s.Status != SessionStatus.CANCELLED
-                        && ((s.StartTime < session.EndTime && s.EndTime > session.StartTime)))
+                        && (s.StartTime < session.EndTime && s.EndTime > session.StartTime))
                     .FirstOrDefaultAsync();
 
                 if (roomConflict != null)
                 {
-                    ModelState.AddModelError("RoomId", $"Room is not available. It's already scheduled from {roomConflict.StartTime:hh\\:mm} to {roomConflict.EndTime:hh\\:mm} on this date.");
+                    ModelState.AddModelError("RoomId", $"Room is not available. It's already scheduled from {roomConflict.StartTime:HH\\:mm} to {roomConflict.EndTime:HH\\:mm} on this date.");
                 }
             }
 
@@ -315,12 +324,12 @@ namespace school.Controllers
                         && s.TeacherId == session.TeacherId
                         && s.SessionDate == session.SessionDate
                         && s.Status != SessionStatus.CANCELLED
-                        && ((s.StartTime < session.EndTime && s.EndTime > session.StartTime)))
+                        && (s.StartTime < session.EndTime && s.EndTime > session.StartTime))
                     .FirstOrDefaultAsync();
 
                 if (teacherConflict != null)
                 {
-                    ModelState.AddModelError("TeacherId", $"Teacher is not available. They have another session from {teacherConflict.StartTime:hh\\:mm} to {teacherConflict.EndTime:hh\\:mm} on this date.");
+                    ModelState.AddModelError("TeacherId", $"Teacher is not available. They have another session from {teacherConflict.StartTime:HH\\:mm} to {teacherConflict.EndTime:HH\\:mm} on this date.");
                 }
             }
 
@@ -528,7 +537,7 @@ namespace school.Controllers
             var sessionSlots = _scheduleService.GetAvailableSlots();
             var slotOptions = sessionSlots.Select(slot => new
             {
-                Value = $"{slot.StartTime:hh\\:mm}-{slot.EndTime:hh\\:mm}",
+                Value = $"{slot.StartTime:HH\\:mm}-{slot.EndTime:HH\\:mm}",
                 Display = slot.DisplayName
             }).ToList();
 

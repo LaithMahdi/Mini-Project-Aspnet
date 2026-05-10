@@ -1,4 +1,4 @@
-﻿@model school.Models.Session
+@model school.Models.Session
 
 @{
     ViewData["Title"] = "Create Session";
@@ -23,6 +23,9 @@
             <div asp-validation-summary="ModelOnly" class="session-validation"></div>
 
             <div class="session-form-fields">
+                <input type="hidden" asp-for="StartTime" />
+                <input type="hidden" asp-for="EndTime" />
+
                 <div class="form-group">
                     <label asp-for="SessionDate" class="control-label"></label>
                     <input asp-for="SessionDate" type="date" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
@@ -87,8 +90,8 @@
         (function () {
             const form = document.querySelector('form[asp-action="Create"]');
             const slotSelect = document.getElementById('SessionSlot');
-            const startTimeInput = form?.querySelector('[asp-for="StartTime"]');
-            const endTimeInput = form?.querySelector('[asp-for="EndTime"]');
+            const startTimeInput = document.getElementsByName('StartTime')[0];
+            const endTimeInput = document.getElementsByName('EndTime')[0];
 
             if (slotSelect && startTimeInput && endTimeInput) {
                 // When slot is selected, populate start/end times

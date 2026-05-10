@@ -1,4 +1,4 @@
-﻿@model school.Models.Session
+@model school.Models.Session
 
 @{
     ViewData["Title"] = "Edit Session";
@@ -22,6 +22,8 @@
         <form asp-action="Edit" method="post" class="session-form-grid">
             <div asp-validation-summary="ModelOnly" class="session-validation"></div>
             <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="StartTime" />
+            <input type="hidden" asp-for="EndTime" />
 
             <div class="session-form-fields">
                 <div class="form-group">
@@ -35,17 +37,17 @@
                     <select id="SessionSlot" class="form-control" required>
                         <option value="">-- Select Time Slot --</option>
                         @{
-                            var currentSlot = $"{Model.StartTime:hh\\:mm}-{Model.EndTime:hh\\:mm}";
+                            var currentSlot = $"{Model.StartTime:HH\\:mm}-{Model.EndTime:HH\\:mm}";
                         }
                         @foreach (var slot in ViewBag.SessionSlots)
                         {
                             if (slot.Value == currentSlot)
                             {
-                                <option value="@slot.Value" selected>@slot.Display</option>
+                                <option value="@slot.Value" selected>@slot.Text</option>
                             }
                             else
                             {
-                                <option value="@slot.Value">@slot.Display</option>
+                                <option value="@slot.Value">@slot.Text</option>
                             }
                         }
                     </select>
@@ -105,8 +107,8 @@
             if (!form) return;
 
             const slotSelect = document.getElementById('SessionSlot');
-            const startTimeInput = form.querySelector('[asp-for="StartTime"]');
-            const endTimeInput = form.querySelector('[asp-for="EndTime"]');
+            const startTimeInput = document.getElementsByName('StartTime')[0];
+            const endTimeInput = document.getElementsByName('EndTime')[0];
 
             if (slotSelect && startTimeInput && endTimeInput) {
                 // When slot is selected, populate start/end times
@@ -146,5 +148,4 @@
             });
         })();
     </script>
-}
 }
