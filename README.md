@@ -75,24 +75,26 @@ school/
 ## 📝 Nouvelles Fonctionnalités "Pro"
 
 ### 🔔 Système de Notification
+
 - **Alertes Automatiques** : Les enseignants sont notifiés lors de l'affectation d'un nouvel étudiant.
 - **Gestion des Sessions** : Les administrateurs reçoivent une alerte immédiate si une session est annulée par un enseignant.
 - **Interface Interactive** : Badge de comptage dynamique et page de gestion avec filtres (Tout, Non lu, Lu).
 
 ### 🎓 Enrôlement Avancé
+
 - **Recherche en temps réel** : Filtrage instantané des étudiants lors de l'affectation.
 - **Gestion des transferts** : Visualisation de la classe actuelle des étudiants et transfert automatique.
 - **Contrôle de Capacité** : Indicateur visuel `[Sélection] / [Capacité]` avec blocage automatique si la limite est dépassée.
 
 ## 🛠️ Technologies utilisées
 
-| Technologie           | Version | Utilisation              |
-| --------------------- | ------- | ------------------------ |
-| ASP.NET Core          | 10      | Framework web            |
-| C#                    | 14.0    | Langage principal        |
-| Entity Framework Core | 10.0.6  | ORM base de données      |
-| Razor View Components | -       | UI dynamique et réutilisable |
-| Tailwind CSS          | -       | Design premium           |
+| Technologie           | Version | Utilisation                    |
+| --------------------- | ------- | ------------------------------ |
+| ASP.NET Core          | 10      | Framework web                  |
+| C#                    | 14.0    | Langage principal              |
+| Entity Framework Core | 10.0.6  | ORM base de données            |
+| Razor View Components | -       | UI dynamique et réutilisable   |
+| Tailwind CSS          | -       | Design premium                 |
 | jQuery / AJAX         | -       | Interactions sans rechargement |
 
 ## 📋 Checklist de développement
@@ -109,6 +111,7 @@ school/
 ## 👨‍💻 Auteur
 
 **Laith Mahdi**
+
 - GitHub : [@LaithMahdi](https://github.com/LaithMahdi)
 
 ---
