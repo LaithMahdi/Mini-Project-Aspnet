@@ -1,0 +1,251 @@
+:root {
+  --notif-unread-bg: #f0f7ff;
+  --notif-unread-border: #3b82f6;
+  --notif-hover-bg: #f8fafc;
+  --notif-title-color: #0f172a;
+  --notif-msg-color: #475569;
+  --notif-time-color: #94a3b8;
+  --notif-icon-bg: #e2e8f0;
+}
+
+.notifications-page {
+  max-width: 900px;
+  margin: 1rem auto 3rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
+}
+
+.notifications-title-area h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.25rem;
+}
+
+.notifications-subtitle {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.notifications-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.notifications-container {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.notifications-tabs {
+  display: flex;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fcfdfe;
+  gap: 1.5rem;
+}
+
+.notif-tab {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notif-tab:hover {
+  color: #3b82f6;
+}
+
+.notif-tab.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notification-item {
+  position: relative;
+  display: flex;
+  padding: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background: var(--notif-hover-bg);
+}
+
+.notification-item.unread {
+  background: var(--notif-unread-bg);
+}
+
+.notification-item.unread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--notif-unread-border);
+}
+
+.notif-icon-box {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  background: var(--notif-icon-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  margin-right: 1.25rem;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.notification-item:hover .notif-icon-box {
+  transform: scale(1.05);
+}
+
+.notif-info .notif-icon-box {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.notif-student .notif-icon-box {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.notif-class .notif-icon-box {
+  background: #fefce8;
+  color: #ca8a04;
+}
+
+.notif-session .notif-icon-box {
+  background: #fff1f2;
+  color: #f43f5e;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.35rem;
+}
+
+.notification-title {
+  font-weight: 700;
+  color: var(--notif-title-color);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.notification-time {
+  font-size: 0.8rem;
+  color: var(--notif-time-color);
+  white-space: nowrap;
+  margin-left: 1rem;
+}
+
+.notification-message {
+  color: var(--notif-msg-color);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 0.25rem;
+}
+
+.notification-badge-new {
+  display: inline-block;
+  background: #3b82f6;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.1rem 0.5rem;
+  border-radius: 1rem;
+  text-transform: uppercase;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.notification-link-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.notifications-empty-state {
+  padding: 5rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+}
+
+.empty-illustration {
+  width: 120px;
+  height: 120px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: #94a3b8;
+  margin-bottom: 1.5rem;
+}
+
+.notifications-empty-state h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.notifications-empty-state p {
+  color: #64748b;
+  max-width: 300px;
+}

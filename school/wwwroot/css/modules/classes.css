@@ -559,3 +559,67 @@
   flex-wrap: wrap;
 }
 
+/* Pro Enrollment UI */
+.class-enrollment-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.25rem;
+}
+
+.enrollment-select {
+  border-radius: 0.75rem;
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background-color: white !important;
+}
+
+.enrollment-select option {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.enrollment-select option:checked {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  color: #1d4ed8 !important;
+  font-weight: 700;
+}
+
+.class-capacity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f1f5f9;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.class-capacity-badge i {
+  color: #3b82f6;
+}
+
+.enrollment-footer {
+  background: #fff;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+}
+
+#studentSearch {
+  border-radius: 0.75rem;
+  padding-left: 0.5rem;
+}
+
+.input-group-text {
+  border-radius: 0.75rem 0 0 0.75rem !important;
+}
+
+#studentSearch {
+  border-radius: 0 0.75rem 0.75rem 0 !important;
+}
+

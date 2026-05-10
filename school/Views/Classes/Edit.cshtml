@@ -1,4 +1,4 @@
-﻿@model school.Models.Classe
+@model school.Models.Classe
 @using school.Models
 @{
     var assignments = ViewData["ClassSubjectAssignments"] as List<ClassSubject> ?? new List<ClassSubject>();
@@ -160,26 +160,91 @@
     </div>
 
     <div class="class-form-shell">
-        <h3>Student List Assignment</h3>
-        <p class="class-form-subtitle">Select active students to affect to this class. Selected students become members of this class.</p>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Student Enrollment Management</h3>
+            <div class="class-capacity-badge">
+                <i class="fa-solid fa-users"></i>
+                <span id="selectedCount">0</span> / @Model.MaxCapacity
+            </div>
+        </div>
+        
+        <p class="class-form-subtitle">Select students to enroll in this class. You can transfer students from other classes by selecting them here.</p>
 
-        <form asp-action="UpdateStudentAssignments" method="post" class="class-form-grid">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="id" value="@Model.Id" />
+        @if (TempData["ClassEditSuccess"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fa-solid fa-circle-check mr-2"></i> @TempData["ClassEditSuccess"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
 
-            <div class="form-group">
-                <label class="control-label">Students</label>
-                <select name="studentIds" class="form-control" asp-items="ViewBag.ClassStudentOptions" multiple size="12"></select>
-                <small class="text-muted">Tip: hold Ctrl (or Cmd) to select multiple students.</small>
+        <div class="class-enrollment-box">
+            <div class="enrollment-search mb-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" id="studentSearch" class="form-control" placeholder="Search students by name or current class..." />
+                </div>
             </div>
 
-            <div class="class-form-actions">
-                <button type="submit" class="btn btn-primary">Update Student List</button>
-            </div>
-        </form>
+            <form asp-action="UpdateStudentAssignments" method="post" id="enrollmentForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div class="form-group">
+                    <select name="studentIds" id="studentList" class="form-control enrollment-select" asp-items="ViewBag.ClassStudentOptions" multiple size="15"></select>
+                    <div class="enrollment-footer mt-2 d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fa-solid fa-circle-info"></i> Hold <strong>Ctrl / Cmd</strong> to select multiple students.
+                        </small>
+                        <button type="submit" class="btn btn-primary" id="saveEnrollmentBtn">
+                            <i class="fa-solid fa-save mr-2"></i> Update Enrollment
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 </section>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            const $studentList = $('#studentList');
+            const $studentSearch = $('#studentSearch');
+            const $selectedCount = $('#selectedCount');
+            const maxCapacity = @Model.MaxCapacity;
+            
+            // Initial count
+            updateCount();
+
+            // Search functionality
+            $studentSearch.on('input', function() {
+                const term = $(this).val().toLowerCase();
+                $studentList.find('option').each(function() {
+                    const text = $(this).text().toLowerCase();
+                    $(this).toggle(text.indexOf(term) > -1);
+                });
+            });
+
+            // Update count on selection change
+            $studentList.on('change', function() {
+                updateCount();
+            });
+
+            function updateCount() {
+                const count = $studentList.find('option:selected').length;
+                $selectedCount.text(count);
+                
+                if (count > maxCapacity) {
+                    $selectedCount.addClass('text-danger font-bold');
+                    $('#saveEnrollmentBtn').prop('disabled', true).attr('title', 'Capacity exceeded');
+                } else {
+                    $selectedCount.removeClass('text-danger font-bold');
+                    $('#saveEnrollmentBtn').prop('disabled', false).attr('title', '');
+                }
+            }
+        });
+    </script>
 }

@@ -309,7 +309,6 @@ namespace school.Controllers
                 return Forbid();
             }
 
-            var classeExists = await _context.Classes.AnyAsync(c => c.Id == id);
             if (!classeExists)
             {
                 return NotFound();
@@ -317,33 +316,64 @@ namespace school.Controllers
 
             var selectedSet = (studentIds ?? new List<Guid>()).ToHashSet();
 
-            var studentsInClass = await _context.Students
-                .Where(s => s.ClassId == id)
-                .ToListAsync();
+            // 1. Get Class info for capacity check
+            var targetClass = await _context.Classes.FindAsync(id);
+            if (targetClass == null) return NotFound();
 
-            foreach (var student in studentsInClass.Where(s => !selectedSet.Contains(s.Id)))
+            if (selectedSet.Count > targetClass.MaxCapacity)
             {
-                student.ClassId = null;
+                TempData["ClassEditError"] = $"Cannot assign {selectedSet.Count} students. The maximum capacity for this class is {targetClass.MaxCapacity}.";
+                return RedirectToAction(nameof(Edit), new { id });
             }
 
-            var assignableSelectedStudents = await _context.Students
-                .Where(s => selectedSet.Contains(s.Id) && s.IsActive && (s.ClassId == null || s.ClassId == id))
+            // 2. Identify students being removed from this class
+            var studentsToRemove = await _context.Students
+                .Where(s => s.ClassId == id && !selectedSet.Contains(s.Id))
                 .ToListAsync();
 
-            foreach (var student in assignableSelectedStudents)
+            foreach (var s in studentsToRemove)
             {
+                s.ClassId = null;
+                // Notify? Maybe later.
+            }
+
+            // 3. Identify students being added (who are either free or in another class)
+            var studentsToAssign = await _context.Students
+                .Include(s => s.User)
+                .Where(s => selectedSet.Contains(s.Id) && s.ClassId != id)
+                .ToListAsync();
+
+            int newlyAssigned = 0;
+            int transferred = 0;
+
+            foreach (var student in studentsToAssign)
+            {
+                if (!student.IsActive) continue;
+
+                if (student.ClassId != null) transferred++;
+                else newlyAssigned++;
+
                 student.ClassId = id;
-            }
 
-            var blockedCount = await _context.Students
-                .CountAsync(s => selectedSet.Contains(s.Id) && s.ClassId != null && s.ClassId != id);
-
-            if (blockedCount > 0)
-            {
-                TempData["ClassEditError"] = $"{blockedCount} selected student(s) are already assigned to another class. Remove them from their current class first.";
+                // Send Notification to Referent Teacher about new student
+                if (targetClass.ReferentTeacherId.HasValue)
+                {
+                    var teacher = await _context.Teachers.FirstOrDefaultAsync(t => t.Id == targetClass.ReferentTeacherId.Value);
+                    if (teacher != null)
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            teacher.UserId,
+                            "New Student Assigned",
+                            $"Student {student.User.FullName} has been transferred/assigned to your class {targetClass.Name}.",
+                            $"/Students/Details/{student.Id}"
+                        );
+                    }
+                }
             }
 
             await _context.SaveChangesAsync();
+            
+            TempData["ClassEditSuccess"] = $"Successfully updated enrollment. {newlyAssigned} students added, {transferred} students transferred, {studentsToRemove.Count} students removed.";
             return RedirectToAction(nameof(Edit), new { id });
         }
 
@@ -549,12 +579,13 @@ namespace school.Controllers
         {
             var students = await _context.Students
                 .Include(s => s.User)
-                .Where(s => s.IsActive && (s.ClassId == null || s.ClassId == classId))
+                .Include(s => s.Class)
+                .Where(s => s.IsActive)
                 .OrderBy(s => s.User.FullName)
                 .Select(s => new
                 {
                     s.Id,
-                    Display = s.User.FullName + (s.ClassId == classId ? " (Assigned)" : "")
+                    Display = s.User.FullName + (s.ClassId == classId ? " (Current)" : (s.ClassId != null ? $" (In {s.Class!.Name})" : " (Unassigned)"))
                 })
                 .ToListAsync();
 
