@@ -63,6 +63,12 @@ namespace school.Models
                 .HasForeignKey(s => s.ClassId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Session>()
+                .HasOne(s => s.Class)
+                .WithMany(c => c.Sessions)
+                .HasForeignKey(s => s.ClassId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<ClassSubject>()
                 .HasIndex(cs => new { cs.ClassId, cs.SubjectId })
                 .IsUnique();

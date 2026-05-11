@@ -1,0 +1,116 @@
+@model school.ViewModels.StudentDashboardViewModel
+
+@{
+    ViewData["Title"] = "Student Dashboard";
+
+    var weekDays = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+    var safeMonthStart = Model.MonthStartDate == default
+        ? new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1)
+        : Model.MonthStartDate;
+    var previousMonth = safeMonthStart.AddMonths(-1);
+    var nextMonth = safeMonthStart.AddMonths(1);
+}
+
+<section class="teacher-calendar-page">
+    <div class="teacher-calendar-hero">
+        <div>
+            <p class="teacher-calendar-eyebrow">Student Workspace</p>
+            <h1>Mon Emploi du Temps</h1>
+            <p class="teacher-calendar-subtitle">@Model.StudentName - @Model.ClassName (@safeMonthStart.ToString("MMMM yyyy"))</p>
+        </div>
+        <div class="teacher-calendar-nav">
+            <a asp-action="Index" asp-route-year="@previousMonth.Year" asp-route-month="@previousMonth.Month" class="teacher-calendar-nav-link">
+                <i class="fa-solid fa-chevron-left"></i> Previous
+            </a>
+            <a asp-action="Index" class="teacher-calendar-nav-link teacher-calendar-nav-link-current">Today</a>
+            <a asp-action="Index" asp-route-year="@nextMonth.Year" asp-route-month="@nextMonth.Month" class="teacher-calendar-nav-link">
+                Next <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="teacher-calendar-stats">
+        <article class="teacher-stat-card">
+            <span>Total Sessions</span>
+            <strong>@Model.TotalSessionsThisMonth</strong>
+        </article>
+        <article class="teacher-stat-card teacher-stat-card-planned">
+            <span>Planned</span>
+            <strong>@Model.PlannedCount</strong>
+        </article>
+        <article class="teacher-stat-card teacher-stat-card-cancelled">
+            <span>Cancelled</span>
+            <strong>@Model.CancelledCount</strong>
+        </article>
+        <article class="teacher-stat-card teacher-stat-card-postponed">
+            <span>Postponed</span>
+            <strong>@Model.PostponedCount</strong>
+        </article>
+    </div>
+
+    @if (Model.ClassId == null)
+    {
+        <div class="admin-empty-state" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i> You are not assigned to a class yet. Please contact the administration.
+        </div>
+    }
+    else
+    {
+        <section class="teacher-calendar-board" aria-label="Monthly student timetable">
+            <div class="teacher-calendar-weekdays">
+                @foreach (var dayName in weekDays)
+                {
+                    <div>@dayName</div>
+                }
+            </div>
+
+            <div class="teacher-calendar-grid">
+                @foreach (var day in Model.Days)
+                {
+                    var dayClass = "teacher-calendar-day";
+                    if (!day.IsCurrentMonth)
+                    {
+                        dayClass += " teacher-calendar-day-muted";
+                    }
+
+                    if (day.IsToday)
+                    {
+                        dayClass += " teacher-calendar-day-today";
+                    }
+
+                    <article class="@dayClass">
+                        <div class="teacher-calendar-day-head">
+                            <time datetime="@day.Date.ToString("yyyy-MM-dd")">@day.Date.Day</time>
+                            @if (day.Sessions.Count > 0)
+                            {
+                                <span class="teacher-calendar-session-count">@day.Sessions.Count</span>
+                            }
+                        </div>
+
+                        @if (day.Sessions.Count > 0)
+                        {
+                            <ul class="teacher-calendar-session-list">
+                                @foreach (var session in day.Sessions.OrderBy(s => s.StartTime))
+                                {
+                                    var statusClass = $"teacher-session-status-{session.Status.ToString().ToLower()}";
+                                    <li>
+                                        <div class="teacher-calendar-session @statusClass">
+                                            <strong>@session.StartTime.ToString("HH:mm") - @session.EndTime.ToString("HH:mm")</strong>
+                                            <span style="font-weight: 700;">@session.SubjectName</span>
+                                            <span>@session.TeacherName</span>
+                                            <span class="teacher-calendar-session-room">@session.RoomName</span>
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="teacher-calendar-empty-day">No classes</p>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</section>

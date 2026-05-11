@@ -4,6 +4,7 @@
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
     var isTeacher = User.IsInRole("Teacher");
     var isAdmin = User.IsInRole("Admin");
+    var isStudent = User.IsInRole("Student");
     var moduleCssPath = currentControllerLower switch
     {
         "home" => "~/css/modules/home.css",
@@ -55,17 +56,31 @@
                         : "sidebar-nav-link sidebar-nav-link-idle";
                 }
 
-                <a class="@navClass("Home")" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
-                <a class="@navClass("Classes")" asp-controller="Classes" asp-action="Index"><i class="fa-solid fa-chalkboard"></i><span>Classes</span></a>
-             @if (!isAdmin){
-                <a class="@navClass("Students")" asp-controller="Students" asp-action="Index"><i class="fa-solid fa-user-graduate"></i><span>Students</span></a>
-             }
+                <a class="@navClass("Home")" asp-controller="Home" asp-action="Index">
+                    <i class="fa-solid fa-house"></i>
+                    <span>@(isStudent ? "Mon Emploi" : "Dashboard")</span>
+                </a>
+
+                @if (isAdmin || isTeacher)
+                {
+                    <a class="@navClass("Classes")" asp-controller="Classes" asp-action="Index"><i class="fa-solid fa-chalkboard"></i><span>Classes</span></a>
+                }
+
+                @if (isTeacher)
+                {
+                    <a class="@navClass("Students")" asp-controller="Students" asp-action="Index"><i class="fa-solid fa-user-graduate"></i><span>Students</span></a>
+                }
+
                 <a class="@navClass("Notifications")" asp-controller="Notifications" asp-action="Index">
                     <i class="fa-solid fa-bell"></i>
                     <span>Notifications</span>
                     @await Component.InvokeAsync("NotificationCount")
                 </a>
-                <a class="@navClass("Sessions")" asp-controller="Sessions" asp-action="Index"><i class="fa-solid fa-calendar-days"></i><span>Sessions</span></a>
+
+                @if (isAdmin || isTeacher)
+                {
+                    <a class="@navClass("Sessions")" asp-controller="Sessions" asp-action="Index"><i class="fa-solid fa-calendar-days"></i><span>Sessions</span></a>
+                }
                 @if (isAdmin)
                 {
                     <a class="@navClass("Users")" asp-controller="Users" asp-action="Index"><i class="fa-solid fa-users-gear"></i><span>Users</span></a>

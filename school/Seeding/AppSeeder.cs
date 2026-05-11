@@ -301,7 +301,7 @@ namespace school.Seeding
                     (new TimeOnly(13, 50), new TimeOnly(15, 20)) 
                 };
 
-                foreach (var classSubject in classSubjects.Take(30))
+                foreach (var classSubject in classSubjects)
                 {
                     if (classSubject.TeacherId == null) continue;
 
@@ -324,7 +324,8 @@ namespace school.Seeding
                             UpdatedAt = now,
                             RoomId = room.Id,
                             SubjectId = classSubject.SubjectId,
-                            TeacherId = classSubject.TeacherId.Value
+                            TeacherId = classSubject.TeacherId.Value,
+                            ClassId = classSubject.ClassId
                         };
 
                         context.Sessions.Add(session);

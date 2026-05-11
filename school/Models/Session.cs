@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using school.Models.Validation;
 
@@ -37,6 +37,13 @@ namespace school.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // FK
+        [Required(ErrorMessage = "Class is required.")]
+        [Display(Name = "Class")]
+        public Guid ClassId { get; set; }
+
+        [ValidateNever]
+        public Classe Class { get; set; } = null!;
+
         [Required(ErrorMessage = "Room is required.")]
         [Display(Name = "Room")]
         public int RoomId { get; set; }

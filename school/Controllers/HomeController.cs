@@ -161,6 +161,105 @@ namespace school.Controllers
                 return View("TeacherCalendar", teacherCalendarModel);
             }
 
+            if (User.IsInRole(Role.Student.ToString()))
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!Guid.TryParse(userIdClaim, out var userId))
+                {
+                    return RedirectToAction("Login", "Account");
+                }
+
+                var student = await _context.Students
+                    .Include(s => s.User)
+                    .Include(s => s.Class)
+                    .FirstOrDefaultAsync(s => s.UserId == userId && s.IsActive && s.User.IsActive);
+
+                if (student == null || student.ClassId == null)
+                {
+                    return View("StudentDashboard", new StudentDashboardViewModel
+                    {
+                        StudentName = student?.User?.FullName ?? "Unknown",
+                        ClassName = "Not assigned to a class",
+                        ClassId = null
+                    });
+                }
+
+                var now = DateOnly.FromDateTime(DateTime.Today);
+                var selectedYear = year ?? now.Year;
+                var selectedMonth = month ?? now.Month;
+
+                var monthStart = new DateOnly(selectedYear, selectedMonth, 1);
+                var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+
+                var startOffset = ((int)monthStart.DayOfWeek + 6) % 7;
+                var gridStart = monthStart.AddDays(-startOffset);
+
+                var endOffset = 6 - (((int)monthEnd.DayOfWeek + 6) % 7);
+                var gridEnd = monthEnd.AddDays(endOffset);
+
+                var sessions = await _context.Sessions
+                    .Include(s => s.Subject)
+                    .Include(s => s.Room)
+                    .Include(s => s.Teacher)
+                        .ThenInclude(t => t.User)
+                    .Where(s => s.ClassId == student.ClassId && s.SessionDate >= gridStart && s.SessionDate <= gridEnd)
+                    .OrderBy(s => s.SessionDate)
+                    .ThenBy(s => s.StartTime)
+                    .Select(s => new StudentCalendarSession
+                    {
+                        Id = s.Id,
+                        SessionDate = s.SessionDate,
+                        StartTime = s.StartTime,
+                        EndTime = s.EndTime,
+                        SubjectName = s.Subject.Name,
+                        TeacherName = s.Teacher.User.FullName,
+                        RoomName = s.Room.Name,
+                        Status = s.Status
+                    })
+                    .ToListAsync();
+
+                var grouped = sessions
+                    .GroupBy(s => s.SessionDate)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                var studentDashboardModel = new StudentDashboardViewModel
+                {
+                    StudentName = student.User.FullName,
+                    ClassName = student.Class.Name,
+                    ClassId = student.ClassId,
+                    Month = selectedMonth,
+                    Year = selectedYear,
+                    MonthStartDate = monthStart,
+                    GridStartDate = gridStart,
+                    GridEndDate = gridEnd,
+                    PlannedCount = sessions.Count(s => s.Status == SessionStatus.PLANNED),
+                    CancelledCount = sessions.Count(s => s.Status == SessionStatus.CANCELLED),
+                    PostponedCount = sessions.Count(s => s.Status == SessionStatus.POSTPONED)
+                };
+
+                var cursor = gridStart;
+                while (cursor <= gridEnd)
+                {
+                    studentDashboardModel.Days.Add(new StudentCalendarDay
+                    {
+                        Date = cursor,
+                        IsCurrentMonth = cursor.Month == selectedMonth,
+                        IsToday = cursor == now,
+                        Sessions = grouped.TryGetValue(cursor, out var daySessions)
+                            ? daySessions
+                            : new List<StudentCalendarSession>()
+                    });
+
+                    cursor = cursor.AddDays(1);
+                }
+
+                studentDashboardModel.TotalSessionsThisMonth = studentDashboardModel.Days
+                    .Where(d => d.IsCurrentMonth)
+                    .Sum(d => d.Sessions.Count);
+
+                return View("StudentDashboard", studentDashboardModel);
+            }
+
             var model = new AdminDashboardViewModel
             {
                 TotalUsers = await _context.Users.CountAsync(),

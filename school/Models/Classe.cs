@@ -53,5 +53,6 @@ namespace school.Models
         // Navigation
         public ICollection<Student> Students { get; set; } = new List<Student>();
         public ICollection<ClassSubject> ClassSubjects { get; set; } = new List<ClassSubject>();
+        public ICollection<Session> Sessions { get; set; } = new List<Session>();
     }
 }

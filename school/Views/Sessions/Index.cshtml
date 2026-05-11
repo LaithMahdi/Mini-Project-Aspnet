@@ -9,16 +9,19 @@
     var status = ViewBag.Status as school.Models.SessionStatus?;
     var teacherId = ViewBag.TeacherId as Guid?;
     var subjectId = ViewBag.SubjectId as int?;
+    var classId = ViewBag.ClassId as Guid?;
     var timeSlot = ViewBag.TimeSlot as string;
     var sessionSlots = ViewBag.SessionSlots as SelectList;
     var statusOptions = ViewBag.StatusOptions as SelectList;
     var teacherOptions = ViewBag.TeacherOptions as SelectList;
     var subjectOptions = ViewBag.SubjectOptions as SelectList;
+    var classOptions = ViewBag.ClassOptions as SelectList;
     var currentPage = ViewBag.CurrentPage as int? ?? 1;
     var totalPages = ViewBag.TotalPages as int? ?? 1;
     var pageSize = ViewBag.PageSize as int? ?? 15;
     var filteredTotal = ViewBag.FilteredTotal as int? ?? 0;
     var isTeacher = ViewBag.IsTeacher as bool? ?? false;
+    var canManageSessions = ViewBag.CanManageSessions as bool? ?? false;
     var startItem = filteredTotal == 0 ? 0 : ((currentPage - 1) * pageSize) + 1;
     var endItem = filteredTotal == 0 ? 0 : Math.Min(currentPage * pageSize, filteredTotal);
     var pageWindowStart = Math.Max(1, currentPage - 1);
@@ -31,7 +34,7 @@
             <h1>Sessions Management</h1>
             <p class="sessions-subtitle">Plan teaching sessions by day, teacher, subject, and schedule.</p>
         </div>
-        @if (!isTeacher)
+        @if (canManageSessions)
         {
             <a asp-action="Create" class="btn btn-primary text-white">+ Create New Session</a>
         }
@@ -73,6 +76,13 @@
         </div>
 
         <div class="sessions-filter-group">
+            <label for="classId">Class</label>
+            <select id="classId" name="classId" class="form-control" asp-items="classOptions">
+                <option value="">All Classes</option>
+            </select>
+        </div>
+
+        <div class="sessions-filter-group">
             <label for="timeSlot">Time Slot</label>
             <select id="timeSlot" name="timeSlot" class="form-control" asp-items="sessionSlots">
                 <option value="">All Slots</option>
@@ -93,6 +103,7 @@
                     <th>Start</th>
                     <th>End</th>
                     <th>Teacher</th>
+                    <th>Class</th>
                     <th>Subject</th>
                     <th>Room</th>
                     <th>Status</th>
@@ -107,6 +118,7 @@
                         <td>@item.StartTime.ToString("HH:mm")</td>
                         <td>@item.EndTime.ToString("HH:mm")</td>
                         <td>@(item.Teacher?.User?.FullName ?? "-")</td>
+                        <td>@(item.Class?.Name ?? "-")</td>
                         <td>@(item.Subject != null ? item.Subject.Name + " (" + item.Subject.Code + ")" : "-")</td>
                         <td>@(item.Room != null ? item.Room.Name : "-")</td>
                         <td>
@@ -117,12 +129,12 @@
                             }
                         </td>
                         <td class="sessions-actions-cell">
-                            @if (!isTeacher)
+                            @if (canManageSessions)
                             {
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="sessions-action sessions-action-edit">Edit</a>
                             }
                             <a asp-action="Details" asp-route-id="@item.Id" class="sessions-action sessions-action-view">View</a>
-                            @if (!isTeacher)
+                            @if (canManageSessions)
                             {
                                 <button type="button"
                                         class="sessions-action sessions-action-delete js-open-session-delete-dialog"
@@ -133,12 +145,15 @@
                             }
                             else if (item.Status != school.Models.SessionStatus.CANCELLED)
                             {
-                                <form asp-action="Cancel" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
-                                    <button type="submit" class="sessions-action sessions-action-delete">Cancel</button>
-                                </form>
+                                if (isTeacher)
+                                {
+                                    <form asp-action="Cancel" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                        <button type="submit" class="sessions-action sessions-action-delete">Cancel</button>
+                                    </form>
+                                }
                             }
                         </td>
                     </tr>
@@ -164,6 +179,7 @@
                        asp-route-status="@status"
                        asp-route-teacherId="@teacherId"
                        asp-route-subjectId="@subjectId"
+                       asp-route-classId="@classId"
                        asp-route-timeSlot="@timeSlot"
                        class="sessions-page-link">Previous</a>
                 }
@@ -181,6 +197,7 @@
                        asp-route-status="@status"
                        asp-route-teacherId="@teacherId"
                        asp-route-subjectId="@subjectId"
+                       asp-route-classId="@classId"
                        asp-route-timeSlot="@timeSlot"
                        class="sessions-page-link">1</a>
 
@@ -224,6 +241,7 @@
                        asp-route-status="@status"
                        asp-route-teacherId="@teacherId"
                        asp-route-subjectId="@subjectId"
+                       asp-route-classId="@classId"
                        asp-route-timeSlot="@timeSlot"
                        class="sessions-page-link">@totalPages</a>
                 }

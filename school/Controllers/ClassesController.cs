@@ -309,7 +309,7 @@ namespace school.Controllers
                 return Forbid();
             }
 
-            if (!classeExists)
+            if (!ClasseExists(id))
             {
                 return NotFound();
             }

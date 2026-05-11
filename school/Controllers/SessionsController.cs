@@ -31,16 +31,20 @@ namespace school.Controllers
             SessionStatus? status,
             Guid? teacherId,
             int? subjectId,
+            Guid? classId,
             string? timeSlot,
             int page = 1)
         {
             const int pageSize = 15;
             var isTeacher = User.IsInRole(Role.Teacher.ToString());
+            var isStudent = User.IsInRole(Role.Student.ToString());
             var currentTeacherId = await GetCurrentTeacherIdAsync();
+            Guid? currentStudentClassId = null;
 
             var sessionsQuery = _context.Sessions
                 .Include(s => s.Room)
                 .Include(s => s.Subject)
+                .Include(s => s.Class)
                 .Include(s => s.Teacher)
                     .ThenInclude(t => t.User)
                 .AsQueryable();
@@ -56,12 +60,25 @@ namespace school.Controllers
                 teacherId = currentTeacherId.Value;
             }
 
+            if (isStudent)
+            {
+                currentStudentClassId = await GetCurrentStudentClassIdAsync();
+                if (!currentStudentClassId.HasValue)
+                {
+                    return Forbid();
+                }
+
+                classId = currentStudentClassId.Value;
+                sessionsQuery = sessionsQuery.Where(s => s.ClassId == currentStudentClassId.Value);
+            }
+
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var term = search.Trim().ToLower();
                 sessionsQuery = sessionsQuery.Where(s =>
                     (s.Room != null && s.Room.Name.ToLower().Contains(term)) ||
                     (s.Subject != null && (s.Subject.Name.ToLower().Contains(term) || s.Subject.Code.ToLower().Contains(term))) ||
+                    (s.Class != null && s.Class.Name.ToLower().Contains(term)) ||
                     (s.Teacher != null && s.Teacher.User != null && s.Teacher.User.FullName.ToLower().Contains(term)));
             }
 
@@ -83,6 +100,11 @@ namespace school.Controllers
             if (subjectId.HasValue)
             {
                 sessionsQuery = sessionsQuery.Where(s => s.SubjectId == subjectId.Value);
+            }
+            
+            if (classId.HasValue)
+            {
+                sessionsQuery = sessionsQuery.Where(s => s.ClassId == classId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(timeSlot))
@@ -120,14 +142,29 @@ namespace school.Controllers
             ViewBag.Status = status;
             ViewBag.TeacherId = teacherId;
             ViewBag.SubjectId = subjectId;
+            ViewBag.ClassId = classId;
             ViewBag.TimeSlot = timeSlot;
             ViewBag.CurrentPage = page;
             ViewBag.PageSize = pageSize;
             ViewBag.TotalPages = totalPages;
             ViewBag.FilteredTotal = filteredTotal;
             ViewBag.IsTeacher = isTeacher;
+            ViewBag.CanManageSessions = !isTeacher && !isStudent;
 
-            PopulateFilterOptions(status, teacherId, subjectId, timeSlot);
+            PopulateFilterOptions(status, teacherId, subjectId, classId, timeSlot);
+
+            if (isStudent && currentStudentClassId.HasValue)
+            {
+                var studentClass = await _context.Classes
+                    .Where(c => c.Id == currentStudentClassId.Value)
+                    .Select(c => new { c.Id, Display = c.Name + " - " + c.Level })
+                    .FirstOrDefaultAsync();
+
+                if (studentClass != null)
+                {
+                    ViewBag.ClassOptions = new SelectList(new[] { studentClass }, "Id", "Display", currentStudentClassId.Value);
+                }
+            }
 
             return View(sessions);
         }
@@ -189,7 +226,7 @@ namespace school.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("SessionDate,StartTime,EndTime,Status,IsActive,RoomId,SubjectId,TeacherId")] Session session)
+        public async Task<IActionResult> Create([Bind("SessionDate,StartTime,EndTime,Status,IsActive,RoomId,SubjectId,TeacherId,ClassId")] Session session)
         {
             Console.WriteLine("\n--- INCOMING SESSION DATA ---");
             Console.WriteLine($"SessionDate: {session.SessionDate:yyyy-MM-dd}");
@@ -280,7 +317,7 @@ namespace school.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,SessionDate,StartTime,EndTime,Status,IsActive,RoomId,SubjectId,TeacherId")] Session session)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,SessionDate,StartTime,EndTime,Status,IsActive,RoomId,SubjectId,TeacherId,ClassId")] Session session)
         {
             if (User.IsInRole(Role.Teacher.ToString()))
             {
@@ -350,6 +387,7 @@ namespace school.Controllers
                     existingSession.RoomId = session.RoomId;
                     existingSession.SubjectId = session.SubjectId;
                     existingSession.TeacherId = session.TeacherId;
+                    existingSession.ClassId = session.ClassId;
 
                     await _context.SaveChangesAsync();
                 }
@@ -386,6 +424,7 @@ namespace school.Controllers
             var session = await _context.Sessions
                 .Include(s => s.Room)
                 .Include(s => s.Subject)
+                .Include(s => s.Class)
                 .Include(s => s.Teacher)
                     .ThenInclude(t => t.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -473,7 +512,7 @@ namespace school.Controllers
             return _context.Sessions.Any(e => e.Id == id);
         }
 
-        private void PopulateFilterOptions(SessionStatus? selectedStatus, Guid? selectedTeacherId, int? selectedSubjectId, string? selectedTimeSlot = null)
+        private void PopulateFilterOptions(SessionStatus? selectedStatus, Guid? selectedTeacherId, int? selectedSubjectId, Guid? selectedClassId, string? selectedTimeSlot = null)
         {
             var statusOptions = Enum.GetValues<SessionStatus>()
                 .Select(s => new
@@ -505,8 +544,18 @@ namespace school.Controllers
                 })
                 .ToList();
 
+            var classOptions = _context.Classes
+                .OrderBy(c => c.Name)
+                .Select(c => new
+                {
+                    c.Id,
+                    Display = c.Name + " - " + c.Level
+                })
+                .ToList();
+
             ViewBag.TeacherOptions = new SelectList(teacherOptions, "Id", "Display", selectedTeacherId);
             ViewBag.SubjectOptions = new SelectList(subjectOptions, "Id", "Display", selectedSubjectId);
+            ViewBag.ClassOptions = new SelectList(classOptions, "Id", "Display", selectedClassId);
 
             // Get available session slots for filter
             var sessionSlots = _scheduleService.GetAvailableSlots();
@@ -519,7 +568,7 @@ namespace school.Controllers
             ViewBag.SessionSlots = new SelectList(slotOptions, "Value", "Text", selectedTimeSlot);
         }
 
-        private void PopulateEditOptions(SessionStatus? selectedStatus = null, int? roomId = null, int? subjectId = null, Guid? teacherId = null)
+        private void PopulateEditOptions(SessionStatus? selectedStatus = null, int? roomId = null, int? subjectId = null, Guid? teacherId = null, Guid? classId = null)
         {
             var statusOptions = Enum.GetValues<SessionStatus>()
                 .Select(s => new
@@ -560,6 +609,15 @@ namespace school.Controllers
                 })
                 .ToList();
 
+            var classOptions = _context.Classes
+                .OrderBy(c => c.Name)
+                .Select(c => new
+                {
+                    c.Id,
+                    Display = c.Name + " - " + c.Level
+                })
+                .ToList();
+
             // Get available session slots
             var sessionSlots = _scheduleService.GetAvailableSlots();
             var slotOptions = sessionSlots.Select(slot => new
@@ -571,6 +629,7 @@ namespace school.Controllers
             ViewBag.RoomOptions = new SelectList(roomOptions, "Id", "Display", roomId);
             ViewBag.SubjectOptions = new SelectList(subjectOptions, "Id", "Display", subjectId);
             ViewBag.TeacherOptions = new SelectList(teacherOptions, "Id", "Display", teacherId);
+            ViewBag.ClassOptions = new SelectList(classOptions, "Id", "Display", classId);
             ViewBag.SessionSlots = new SelectList(slotOptions, "Value", "Display");
         }
 
@@ -585,6 +644,20 @@ namespace school.Controllers
             return await _context.Teachers
                 .Where(t => t.UserId == userId && t.IsActive)
                 .Select(t => (Guid?)t.Id)
+                .FirstOrDefaultAsync();
+        }
+
+        private async Task<Guid?> GetCurrentStudentClassIdAsync()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdClaim, out var userId))
+            {
+                return null;
+            }
+
+            return await _context.Students
+                .Where(s => s.UserId == userId)
+                .Select(s => s.ClassId)
                 .FirstOrDefaultAsync();
         }
     }
